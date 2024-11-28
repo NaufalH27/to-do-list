@@ -11,7 +11,7 @@ public class SaveState {
 
 
     //getter and setter
-    public List<Task> getTaskList() {
+    public List<Task> getTasks() {
         return this.tasks;
     }
 
@@ -20,7 +20,7 @@ public class SaveState {
     }
 
 
-    public void setTaskList(List<Task> tasks) {
+    public void setTasks(List<Task> tasks) {
         this.tasks = tasks;
     }
 
