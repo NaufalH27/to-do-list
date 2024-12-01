@@ -3,6 +3,7 @@ package org.uns.todolist.service;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.uns.todolist.helper.SaveStateFileHelper;
 import org.uns.todolist.models.SaveState;
@@ -63,4 +64,22 @@ public class StateManager {
         SaveStateFileHelper.save(this.state);
     }
 
+    //menmgebalikan semua task
+    public List<Task> getAllTasks() {
+        return this.state.getTasks();
+    }
+
+    //mengembalikan semua task yang sudah di tandakan selesai (isComplete = true)
+    public List<Task> getCompletedTask() {
+        return this.state.getTasks().stream()
+                .filter(Task::getIsCompleted)
+                .collect(Collectors.toList()); 
+    }
+
+    //mengembalikan semua task yang belum selesai (isComplete = false)
+    public List<Task> getIncompleteTask() {
+        return this.state.getTasks().stream()
+                .filter(task -> !task.getIsCompleted())
+                .collect(Collectors.toList()); 
+    }
 }
