@@ -6,6 +6,8 @@ import org.uns.todolist.models.SaveState;
 import org.uns.todolist.service.StateManager;
 import org.uns.todolist.service.StatePersistence;
 
+import com.google.gson.JsonSyntaxException;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,16 +32,12 @@ public class MainApp extends Application {
         SaveState saveState = loadSaveState(statePersistence);
         StateManager stateManager = createStateManager(saveState, statePersistence);
         
-        stateManager.addTask("yyy", null);
-        stateManager.getAllTasks().forEach(task-> System.out.println(task.getNamaTask()));
-        statePersistence.loadSavedData().getTasks().forEach(task -> System.out.println(task.getNamaTask()));
-        
         //setup stage
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root);
         stage.setTitle(TITLE);
         stage.setScene(scene);
-        stage.show(); 
+        stage.show();
 
         //mulai aplikasi
         fxmlLoader.setControllerFactory(param -> new FXMLController());
@@ -59,7 +57,8 @@ public class MainApp extends Application {
                 return statePersistence.recreateSaveFile();
             }
             return loadedState;
-        } catch (IOException e) {
+
+        } catch (IOException | JsonSyntaxException e) {
             return statePersistence.recreateSaveFile();
         }
     }
