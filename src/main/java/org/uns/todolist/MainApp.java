@@ -2,9 +2,9 @@ package org.uns.todolist;
 
 import java.io.IOException;
 
-import org.uns.todolist.models.SaveState;
-import org.uns.todolist.service.StateManager;
-import org.uns.todolist.service.StatePersistence;
+import org.uns.todolist.models.SaveData;
+import org.uns.todolist.service.DataManager;
+import org.uns.todolist.service.DataPersistence;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -28,9 +28,12 @@ public class MainApp extends Application {
 
     static void setRoot(FXMLLoader fxmlLoader, Stage stage) throws IOException {
         //inisiasi objek yang dibutuhkan aplikasi
-        StatePersistence statePersistence = createStatePersistence();
-        SaveState saveState = loadSaveState(statePersistence);
-        StateManager stateManager = createStateManager(saveState, statePersistence);
+        DataPersistence dataPersistence = createDataPersistence();
+        SaveData saveData = loadSaveData(dataPersistence);
+        DataManager dataManager = createDataManager(saveData, dataPersistence);
+        
+        //mulai aplikasi
+        fxmlLoader.setControllerFactory(param -> new FXMLController(dataManager));
         
         //setup stage
         Parent root = fxmlLoader.load();
@@ -39,32 +42,31 @@ public class MainApp extends Application {
         stage.setScene(scene);
         stage.show();
 
-        //mulai aplikasi
-        fxmlLoader.setControllerFactory(param -> new FXMLController(stateManager));
+
        
     }
 
 
-    private static StatePersistence createStatePersistence() {
-        return new StatePersistence();
+    private static DataPersistence createDataPersistence() {
+        return new DataPersistence();
     }
 
-    private static SaveState loadSaveState(StatePersistence statePersistence) throws IOException {
+    private static SaveData loadSaveData(DataPersistence dataPersistence) throws IOException {
         try {
-            SaveState loadedState = statePersistence.loadSavedData();
+            SaveData loadedData = dataPersistence.loadSavedData();
 
-            if (loadedState == null) {
-                return statePersistence.recreateSaveFile();
+            if (loadedData == null) {
+                return dataPersistence.recreateSaveFile();
             }
-            return loadedState;
+            return loadedData;
 
         } catch (IOException | JsonSyntaxException e) {
-            return statePersistence.recreateSaveFile();
+            return dataPersistence.recreateSaveFile();
         }
     }
 
-    private static StateManager createStateManager(SaveState saveState, StatePersistence statePersistence) {
-        return new StateManager(saveState, statePersistence);
+    private static DataManager createDataManager(SaveData saveData, DataPersistence dataPersistence) {
+        return new DataManager(saveData, dataPersistence);
     }
 
     

@@ -8,18 +8,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.uns.todolist.models.SaveState;
+import org.uns.todolist.models.SaveData;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 
-public class StatePersistence {
+public class DataPersistence {
     private final String SAVE_PATH = System.getProperty("user.dir") + "/save/";
     private final String FILE_NAME = "saveFile.json";
     
 
-    public void save(SaveState state) throws IOException {
+    public void save(SaveData data) throws IOException {
         File directory = new File(SAVE_PATH);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -29,34 +29,34 @@ public class StatePersistence {
         }
 
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(SAVE_PATH + FILE_NAME))) {
-            state.setLastUpdate(new Date());
-            gson.toJson(state, writer);
+            data.setLastUpdate(new Date());
+            gson.toJson(data, writer);
             writer.flush();
             writer.close(); 
         }
        
     }
 
-    public SaveState loadSavedData() throws IOException {
+    public SaveData loadSavedData() throws IOException {
         Gson gson = new Gson();
         try(FileReader reader = new FileReader(SAVE_PATH + FILE_NAME)) {
-            return gson.fromJson(reader, SaveState.class);
+            return gson.fromJson(reader, SaveData.class);
         }
        
     }
 
 
-    public SaveState recreateSaveFile() throws IOException {
+    public SaveData recreateSaveFile() throws IOException {
         System.out.println("Gagal memuat save File, membuat save baru");
-        SaveState newState = new SaveState(new ArrayList<>());
+        SaveData newData = new SaveData(new ArrayList<>());
 
         try {
-            this.save(newState);
+            this.save(newData);
         } catch (IOException saveException) {
             System.out.println("Unexpected Exception Program gagal dijalankan: " + saveException.getMessage());
             throw new IOException("Gagal untuk membuat save baru", saveException);
         }
         
-        return newState;
+        return newData;
     }
 }

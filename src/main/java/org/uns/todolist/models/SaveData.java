@@ -5,13 +5,13 @@ import java.util.Date;
 import java.util.List;
 
 //objek untuk menyimpan dan load progress aplikasi  
-public class SaveState {
+public class SaveData {
 
     private final List<Task> tasks;
     private Date lastUpdate;
 
     
-    public SaveState(List<Task> tasks) {
+    public SaveData(List<Task> tasks) {
         this.tasks = tasks;
         lastUpdate = new Date();
     }
