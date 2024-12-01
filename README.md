@@ -14,4 +14,4 @@ Projek ini adalah projek akhir kuliah yang dimana setiap kelompok diharuskan mem
 ## Cara compile :
 1. Pastikan maven tersedia dan terkonfigurasi di perangkat
 2. build dependencies dengan menjalankan perintah `mvn clean install`
-3. setelah terbuild  pergi ke src/main/java/org/uns/notepadmini dan jalankan file `MainApp.java`
+3. setelah terbuild  pergi ke src/main/java/org/uns/todolist dan jalankan file `MainApp.java`
