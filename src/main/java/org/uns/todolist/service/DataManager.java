@@ -19,6 +19,17 @@ public class DataManager {
         this.persistence = persistence;
     }
 
+
+
+     /**
+     * Menambahkan task baru dengan nama dan tenggat waktu yang ditentukan ke daftar task.
+     * 
+     * @param namaTask Nama task yang akan ditambahkan. Tidak boleh null atau kosong.
+     * @param deadline Tenggat waktu untuk task.
+     * @throws IllegalArgumentException jika nama task null atau kosong.
+     * @throws IOException jika terjadi kesalahan saat menyimpan data task.
+     */
+
     public void addTask(String namaTask, Date deadline) throws IOException {
         if (namaTask == null || namaTask.trim().isEmpty()) {
             throw new IllegalArgumentException("Nama Aktivitas Tidak Boleh Kosong");
@@ -32,6 +43,14 @@ public class DataManager {
         this.persistence.save(this.data);
     }
 
+
+    /**
+     * Menghapus task berdasarkan ID task dari daftar task.
+     * 
+     * @param taskId ID task yang akan dihapus.
+     * @throws IllegalArgumentException jika task dengan ID yang ditentukan tidak ditemukan.
+     * @throws IOException jika terjadi kesalahan saat menyimpan data setelah penghapusan.
+     */
     public void removeTask(int taskId)  throws IOException {
         Task taskToRemove = this.getTaskById(taskId);
         this.data.removeTask(taskToRemove);
@@ -41,12 +60,22 @@ public class DataManager {
         this.persistence.save(this.data);
     }
 
+    /**
+     * Menandai task sebagai selesai berdasarkan ID task.
+     * 
+     * @param taskId ID task yang akan ditandai sebagai selesai.
+     * @throws IllegalArgumentException jika task dengan ID yang ditentukan tidak ditemukan.
+     */
     public void completeTask(int taskId) {
         Task taskToComplete = this.getTaskById(taskId);
         taskToComplete.completeTask();
     }
 
-    //menmgebalikan semua task
+    /**
+     * Mengambil semua task yang sudah ditandai sebagai selesai.
+     * 
+     * @return Daftar task yang telah selesai.
+     */
     public List<Task> getAllTasks() {
         return new ArrayList<>(this.data.getTasks());
     }
@@ -58,14 +87,19 @@ public class DataManager {
                 .collect(Collectors.toList()); 
     }
 
-    //mengembalikan semua task yang belum selesai (isComplete = false)
+    /**
+     * Mengambil semua task yang belum selesai.
+     * 
+     * @return Daftar task yang belum selesai.
+     */
     public List<Task> getIncompleteTasks() {
         return this.data.getTasks().stream()
                 .filter(task -> !task.getIsCompleted())
                 .collect(Collectors.toList()); 
     }
 
-    //mengembalikan satu task sesuai index
+
+    
     private Task getTaskById(int taskId) {
         List<Task> tasks = this.data.getTasks();
 
