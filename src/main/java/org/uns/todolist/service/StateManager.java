@@ -1,8 +1,10 @@
 package org.uns.todolist.service;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+import org.uns.todolist.helper.SaveStateFileHelper;
 import org.uns.todolist.models.SaveState;
 import org.uns.todolist.models.Task;
 
@@ -14,7 +16,7 @@ public class StateManager {
         this.state = state;
     }
 
-    public void addTask(String namaTask, Date deadline) {
+    public void addTask(String namaTask, Date deadline) throws IOException {
         if (namaTask == null || namaTask.trim().isEmpty()) {
             throw new IllegalArgumentException("Nama Aktivitas Tidak Boleh Kosong");
         }
@@ -27,10 +29,13 @@ public class StateManager {
         
         //memperbarui status terakhir kali state di update
         this.state.setLastUpdate(new Date());
+
+        //save current state
+        SaveStateFileHelper.save(this.state);
     }
 
 
-    public void removeTask(int taskIndex) {
+    public void removeTask(int taskIndex)  throws IOException {
         List<Task> tasks = this.state.getTasks();
 
         if (tasks == null) {
@@ -53,6 +58,9 @@ public class StateManager {
         
         //memperbarui status terakhir kali state di update
         this.state.setLastUpdate(new Date());
+
+        //save current state
+        SaveStateFileHelper.save(this.state);
     }
 
 }
