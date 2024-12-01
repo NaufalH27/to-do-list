@@ -19,10 +19,8 @@ public class DataManager {
         this.persistence = persistence;
     }
 
-
-
      /**
-     * Menambahkan task baru dengan nama dan tenggat waktu yang ditentukan ke daftar task.
+     * Menambahkan task baru dengan nama dan tenggat waktu yang ditentukan ke daftar  setiap task yang ditambahkan, id akan bertambah.
      * 
      * @param namaTask Nama task yang akan ditambahkan. Tidak boleh null atau kosong.
      * @param deadline Tenggat waktu untuk task.
@@ -40,9 +38,9 @@ public class DataManager {
         this.data.addTask(newTask);
         
         //save data
+        this.data.incrementTaskId();
         this.persistence.save(this.data);
     }
-
 
     /**
      * Menghapus task berdasarkan ID task dari daftar task.
@@ -56,7 +54,6 @@ public class DataManager {
         this.data.removeTask(taskToRemove);
         
         //save data
-        this.data.incrementTaskId();
         this.persistence.save(this.data);
     }
 

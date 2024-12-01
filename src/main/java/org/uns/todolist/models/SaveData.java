@@ -15,7 +15,7 @@ public class SaveData {
     public SaveData(List<Task> tasks) {
         this.tasks = tasks;
         lastUpdate = new Date();
-        this.currentTaskId = 0;
+        this.currentTaskId = 1;
     }
 
     //getter and setter

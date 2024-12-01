@@ -34,7 +34,7 @@ public class MainApp extends Application {
         
         //mulai aplikasi
         fxmlLoader.setControllerFactory(param -> new FXMLController(dataManager));
-        
+
         //setup stage
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root);
