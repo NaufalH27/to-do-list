@@ -1,4 +1,4 @@
-# projek akhir kuliah
+# PROJEK AKHIR
 Projek ini adalah projek akhir kuliah yang dimana setiap kelompok diharuskan membuat sesuatu menggunakan framework JavaFX. kami dari Kelompok 12 memutuskan membuat aplikasi To-Do List sederhana menggunakan framework JavaFX
 <br>
 
