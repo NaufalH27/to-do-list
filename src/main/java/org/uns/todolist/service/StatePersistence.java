@@ -28,15 +28,21 @@ public class StatePersistence {
             directory.mkdirs();
         }
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(SAVE_PATH + FILE_NAME));
-        state.setLastUpdate(new Date());
-        gson.toJson(state, writer);
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(SAVE_PATH + FILE_NAME))) {
+            state.setLastUpdate(new Date());
+            gson.toJson(state, writer);
+            writer.flush();
+            writer.close(); 
+        }
+       
     }
 
-    public SaveState loadSavedState() throws IOException {
+    public SaveState loadSavedData() throws IOException {
         Gson gson = new Gson();
-        FileReader reader = new FileReader(SAVE_PATH + FILE_NAME);
-        return gson.fromJson(reader, SaveState.class);
+        try(FileReader reader = new FileReader(SAVE_PATH + FILE_NAME)) {
+            return gson.fromJson(reader, SaveState.class);
+        }
+       
     }
 
 

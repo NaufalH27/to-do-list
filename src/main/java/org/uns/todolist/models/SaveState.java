@@ -1,6 +1,6 @@
 package org.uns.todolist.models;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class SaveState {
 
     //getter and setter
     public List<Task> getTasks() {
-        return Collections.unmodifiableList(this.tasks);
+        return new ArrayList<>(this.tasks);
     }
 
     public Date getLastUpdate() {

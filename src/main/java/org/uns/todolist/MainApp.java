@@ -30,12 +30,16 @@ public class MainApp extends Application {
         SaveState saveState = loadSaveState(statePersistence);
         StateManager stateManager = createStateManager(saveState, statePersistence);
         
+        stateManager.addTask("yyy", null);
+        stateManager.getAllTasks().forEach(task-> System.out.println(task.getNamaTask()));
+        statePersistence.loadSavedData().getTasks().forEach(task -> System.out.println(task.getNamaTask()));
+        
         //setup stage
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root);
         stage.setTitle(TITLE);
         stage.setScene(scene);
-        stage.show();
+        stage.show(); 
 
         //mulai aplikasi
         fxmlLoader.setControllerFactory(param -> new FXMLController());
@@ -49,13 +53,12 @@ public class MainApp extends Application {
 
     private static SaveState loadSaveState(StatePersistence statePersistence) throws IOException {
         try {
-            SaveState loadedState = statePersistence.loadSavedState();
+            SaveState loadedState = statePersistence.loadSavedData();
 
             if (loadedState == null) {
                 return statePersistence.recreateSaveFile();
             }
             return loadedState;
-            
         } catch (IOException e) {
             return statePersistence.recreateSaveFile();
         }
