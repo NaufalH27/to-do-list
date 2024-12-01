@@ -5,16 +5,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.uns.todolist.helper.SaveStateFileHelper;
 import org.uns.todolist.models.SaveState;
 import org.uns.todolist.models.Task;
 
 
 public class StateManager {
     private final SaveState state;
+    private final StatePersistence persistence;
 
-    public StateManager(SaveState state) {
+    public StateManager(SaveState state, StatePersistence persistence) {
         this.state = state;
+        this.persistence = persistence;
     }
 
     public void addTask(String namaTask, Date deadline) throws IOException {
@@ -28,7 +29,7 @@ public class StateManager {
         
         //save dan memperbarui status terakhir kali state di update
         this.state.setLastUpdate(new Date());
-        SaveStateFileHelper.save(this.state);
+        this.persistence.save(this.state);
     }
 
 
@@ -53,7 +54,7 @@ public class StateManager {
         
         //save dan memperbarui status terakhir kali state di update
         this.state.setLastUpdate(new Date());
-        SaveStateFileHelper.save(this.state);
+        this.persistence.save(this.state);
     }
 
     //menmgebalikan semua task
