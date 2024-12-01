@@ -40,7 +40,7 @@ public class MainApp extends Application {
         stage.show();
 
         //mulai aplikasi
-        fxmlLoader.setControllerFactory(param -> new FXMLController());
+        fxmlLoader.setControllerFactory(param -> new FXMLController(stateManager));
        
     }
 
