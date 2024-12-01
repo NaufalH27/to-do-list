@@ -4,5 +4,6 @@ module org.uns.todolist {
     requires javafx.media;
     requires com.google.gson;
     opens org.uns.todolist to javafx.fxml;
+    opens org.uns.todolist.models to com.google.gson;
     exports org.uns.todolist;
 }

@@ -2,6 +2,10 @@ package org.uns.todolist;
 
 import java.io.IOException;
 
+import org.uns.todolist.models.SaveState;
+import org.uns.todolist.service.StateManager;
+import org.uns.todolist.service.StatePersistence;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -21,15 +25,47 @@ public class MainApp extends Application {
     }
 
     static void setRoot(FXMLLoader fxmlLoader, Stage stage) throws IOException {
-        fxmlLoader.setControllerFactory(param -> new FXMLController());
+        //inisiasi objek yang dibutuhkan aplikasi
+        StatePersistence statePersistence = createStatePersistence();
+        SaveState saveState = loadSaveState(statePersistence);
+        StateManager stateManager = createStateManager(saveState, statePersistence);
+        
+        //setup stage
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root);
         stage.setTitle(TITLE);
         stage.setScene(scene);
         stage.show();
+
+        //mulai aplikasi
+        fxmlLoader.setControllerFactory(param -> new FXMLController());
+       
     }
 
 
+    private static StatePersistence createStatePersistence() {
+        return new StatePersistence();
+    }
+
+    private static SaveState loadSaveState(StatePersistence statePersistence) throws IOException {
+        try {
+            SaveState loadedState = statePersistence.loadSavedState();
+
+            if (loadedState == null) {
+                return statePersistence.recreateSaveFile();
+            }
+            return loadedState;
+            
+        } catch (IOException e) {
+            return statePersistence.recreateSaveFile();
+        }
+    }
+
+    private static StateManager createStateManager(SaveState saveState, StatePersistence statePersistence) {
+        return new StateManager(saveState, statePersistence);
+    }
+
+    
     public static void main(String[] args) {
         launch(args);
     }

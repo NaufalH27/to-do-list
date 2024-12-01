@@ -8,11 +8,12 @@ import java.util.List;
 public class SaveState {
 
     private final List<Task> tasks;
-    private Date lastUpdate = null;
+    private Date lastUpdate;
 
     
     public SaveState(List<Task> tasks) {
         this.tasks = tasks;
+        lastUpdate = new Date();
     }
 
     //getter and setter

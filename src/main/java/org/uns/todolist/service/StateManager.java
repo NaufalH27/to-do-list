@@ -27,8 +27,7 @@ public class StateManager {
         Task newTask = new Task(namaTask, deadline);
         this.state.addTask(newTask);
         
-        //save dan memperbarui status terakhir kali state di update
-        this.state.setLastUpdate(new Date());
+        //save state
         this.persistence.save(this.state);
     }
 
@@ -52,8 +51,7 @@ public class StateManager {
         Task taskToRemove = this.state.getTasks().get(taskIndex);
         this.state.removeTask(taskToRemove);
         
-        //save dan memperbarui status terakhir kali state di update
-        this.state.setLastUpdate(new Date());
+        //save state
         this.persistence.save(this.state);
     }
 
