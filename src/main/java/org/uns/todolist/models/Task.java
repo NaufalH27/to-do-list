@@ -6,6 +6,7 @@ import java.util.Date;
 public class Task {
 
     //getter only
+    private final int taskId;
     private final String namaTask;
     private final Date created;
     private final Date deadline;
@@ -15,7 +16,8 @@ public class Task {
     private Date completedDate = null;
 
 
-    public Task(String namaTask, Date deadline) {
+    public Task(int taskId, String namaTask, Date deadline) {
+        this.taskId = taskId;
         this.namaTask = namaTask;
         this.deadline = deadline;
 
@@ -45,6 +47,10 @@ public class Task {
         return this.completedDate;
     }
 
+    public int getTaskId() {
+        return taskId;
+    }
+    
     //fungsi untuk menandai kalau task itu selesai atau tidak    
     public void completeTask() {
         this.isCompleted = true;
@@ -55,4 +61,5 @@ public class Task {
         this.isCompleted = false;
         this.completedDate = null;
     }
+
 }

@@ -7,6 +7,7 @@ import java.util.List;
 //objek untuk menyimpan dan load progress aplikasi  
 public class SaveData {
 
+    private int currentTaskId;
     private final List<Task> tasks;
     private Date lastUpdate;
 
@@ -14,6 +15,7 @@ public class SaveData {
     public SaveData(List<Task> tasks) {
         this.tasks = tasks;
         lastUpdate = new Date();
+        this.currentTaskId = 0;
     }
 
     //getter and setter
@@ -24,17 +26,26 @@ public class SaveData {
     public Date getLastUpdate() {
         return this.lastUpdate;
     }
-    
+
+    public int getCurrentTaskId() {
+        return currentTaskId;
+    }
+
+
     public void setLastUpdate(Date lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 
-    //utilitas untuk update data List Task
+    //utilitas untuk update data
     public void addTask(Task task) {
         this.tasks.add(task);
     }
     
     public void removeTask(Task task) {
         this.tasks.remove(task);
+    }
+  
+    public void incrementTaskId() {
+        this.currentTaskId++;
     }
 }
