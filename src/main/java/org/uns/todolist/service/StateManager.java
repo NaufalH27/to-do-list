@@ -24,14 +24,10 @@ public class StateManager {
 
         //jika nama valid : buat task baru dengan nama tersebut dan tambahkan ke save state
         Task newTask = new Task(namaTask, deadline);
-        List<Task> tasks = this.state.getTasks();
-        tasks.add(newTask);
-        this.state.setTasks(tasks);
+        this.state.addTask(newTask);
         
-        //memperbarui status terakhir kali state di update
+        //save dan memperbarui status terakhir kali state di update
         this.state.setLastUpdate(new Date());
-
-        //save current state
         SaveStateFileHelper.save(this.state);
     }
 
@@ -40,27 +36,23 @@ public class StateManager {
         List<Task> tasks = this.state.getTasks();
 
         if (tasks == null) {
-            throw new IllegalStateException("Illegal Null Task List");
+            throw new IllegalStateException("internal error");
         }
     
-
         if (tasks.isEmpty()) {
             throw new IllegalStateException("Tidak ada Aktivitas yang di hapus");
         }
-
 
         if(taskIndex >= tasks.size() || taskIndex < 0) {
             throw new IllegalArgumentException("Illegal input");
         }
 
         //jika index valid maka hapus task dari list
-        tasks.remove(taskIndex);
-        this.state.setTasks(tasks);
+        Task taskToRemove = this.state.getTasks().get(taskIndex);
+        this.state.removeTask(taskToRemove);
         
-        //memperbarui status terakhir kali state di update
+        //save dan memperbarui status terakhir kali state di update
         this.state.setLastUpdate(new Date());
-
-        //save current state
         SaveStateFileHelper.save(this.state);
     }
 
