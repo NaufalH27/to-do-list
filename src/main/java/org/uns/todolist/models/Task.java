@@ -45,13 +45,14 @@ public class Task {
         return this.completedDate;
     }
 
-
-    public void setIsCompleted(Boolean isCompleted) {
-        this.isCompleted = isCompleted;
+    //fungsi untuk menandai kalau task itu selesai atau tidak    
+    public void completeTask() {
+        this.isCompleted = true;
+        this.completedDate = new Date();
     }
 
-    public void setCompletedDate(Date completedDate) {
-        this.completedDate = completedDate;
+    public void uncompleteTask() {
+        this.isCompleted = false;
+        this.completedDate = null;
     }
-
 }
