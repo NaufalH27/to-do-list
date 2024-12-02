@@ -68,6 +68,11 @@ public class DataManager {
         taskToComplete.completeTask();
     }
 
+    public void uncompleteTask(int taskId) {
+        Task taskToComplete = this.getTaskById(taskId);
+        taskToComplete.uncompleteTask();
+    }
+
     /**
      * Mengambil semua task yang sudah ditandai sebagai selesai.
      * 

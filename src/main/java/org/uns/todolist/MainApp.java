@@ -37,7 +37,7 @@ public class MainApp extends Application {
 
         //setup stage
         Parent root = fxmlLoader.load();
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 1280, 720);
         stage.setTitle(TITLE);
         stage.setScene(scene);
         stage.show();

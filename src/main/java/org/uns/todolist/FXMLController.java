@@ -2,24 +2,26 @@ package org.uns.todolist;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 public class FXMLController {
 
@@ -33,26 +35,9 @@ public class FXMLController {
     private Button addTaskButton;
 
     @FXML
-    private TableView<Task> taskTable;
-
-    @FXML
-    private TableColumn<Task, Integer> idColumn;
-
-    @FXML
-    private TableColumn<Task, String> nameColumn;
-
-    @FXML
-    private TableColumn<Task, String> deadlineColumn;
-
-    @FXML
-    private TableColumn<Task, String> statusColumn;
-
-    @FXML
-    private TableColumn<Task, HBox> actionsColumn;
+    private VBox taskContainer;
 
     private final DataManager dataManager;
-
-    private final ObservableList<Task> taskList = FXCollections.observableArrayList();
 
     public FXMLController(DataManager dataManager) {
         this.dataManager = dataManager;
@@ -60,43 +45,7 @@ public class FXMLController {
 
     @FXML
     public void initialize() {
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("taskId"));
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("namaTask"));
-        deadlineColumn.setCellValueFactory(task -> {
-            Date deadline = task.getValue().getDeadline();
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-            return new SimpleStringProperty(deadline != null ? sdf.format(deadline) : "-");
-        });
-        statusColumn.setCellValueFactory(task -> 
-            new SimpleStringProperty(task.getValue().getIsCompleted() ? "Completed" : "Pending")
-        );
-
-        actionsColumn.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(HBox item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null) {
-                    setGraphic(null);
-                    return;
-                }
-
-                Task task = getTableRow().getItem();
-                if (task == null) return;
-
-                Button completeBtn = new Button("Complete");
-                completeBtn.setStyle("-fx-background-color: #2196f3; -fx-text-fill: white;");
-                completeBtn.setOnAction(e -> handleCompleteTask(task));
-
-                Button removeBtn = new Button("Remove");
-                removeBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
-                removeBtn.setOnAction(e -> handleRemoveTask(task));
-
-                HBox actions = new HBox(5, completeBtn, removeBtn);
-                setGraphic(actions);
-            }
-        });
-
-        refreshTaskTable();
+        refreshTaskContainer();
     }
 
     @FXML
@@ -121,7 +70,7 @@ public class FXMLController {
 
         try {
             dataManager.addTask(taskName, deadline);
-            refreshTaskTable();
+            refreshTaskContainer();
             taskNameField.clear();
             deadlineField.clear();
         } catch (IOException e) {
@@ -129,23 +78,111 @@ public class FXMLController {
         }
     }
 
-    private void handleCompleteTask(Task task) {
-        dataManager.completeTask(task.getTaskId());
-        refreshTaskTable();
+    private void refreshTaskContainer() {
+        taskContainer.getChildren().clear();
+    
+        // Get all tasks and sort them by deadline and then completion status
+        List<Task> sortedTasks = dataManager.getAllTasks()
+                                            .stream()
+                                            .sorted(Comparator
+                                                .comparing(Task::getIsCompleted)
+                                                .thenComparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())))
+                                            .collect(Collectors.toList());
+    
+        for (Task task : sortedTasks) {
+            HBox taskBox = createTaskBox(task);
+    
+            // Style for overdue tasks (alert style)
+            if (!task.getIsCompleted() && task.getDeadline() != null && task.getDeadline().before(new Date())) {
+                taskBox.setStyle("-fx-background-color: #ffcccc; -fx-border-color: #ff0000; -fx-border-width: 2;");
+            }
+    
+            // Style for completed tasks
+            if (task.getIsCompleted()) {
+                taskBox.setStyle("-fx-background-color: #d3d3d3; -fx-opacity: 0.6; -fx-padding: 15;"); // Keep padding consistent
+            }
+    
+            taskContainer.getChildren().add(taskBox);
+        }
     }
+    
+    
+    
+
+
+    private HBox createTaskBox(Task task) {
+        HBox taskBox = new HBox(15); // Spacing between elements
+        taskBox.setStyle("-fx-padding: 15; -fx-background-color: #e0e0e0; -fx-border-radius: 10; -fx-border-color: #ddd;");
+        taskBox.setAlignment(Pos.CENTER_LEFT); // Ensure elements are aligned properly
+
+        // Checklist box
+        CheckBox completeCheckBox = new CheckBox();
+        completeCheckBox.setStyle("-fx-scale-x: 1.5; -fx-scale-y: 1.5;"); // Increase size of the checkbox
+        completeCheckBox.setSelected(task.getIsCompleted());
+        completeCheckBox.setOnAction(e -> toggleTaskCompletion(task));
+
+        // Task details
+        VBox taskDetails = new VBox(5); // Space between task name and deadline
+        taskDetails.setAlignment(Pos.CENTER_LEFT); // Align task details to the left
+        Label taskNameLabel = new Label(task.getNamaTask());
+        taskNameLabel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+        if (task.getIsCompleted()) {
+            taskNameLabel.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-strikethrough: true;"); // Cross out if completed
+        }
+        Label deadlineLabel = new Label(task.getDeadline() != null
+                ? new SimpleDateFormat("d MMM yyyy").format(task.getDeadline())
+                : "No Deadline");
+        deadlineLabel.setStyle("-fx-font-size: 14; -fx-text-fill: #757575;");
+        taskDetails.getChildren().addAll(taskNameLabel, deadlineLabel);
+
+        // Action buttons
+        HBox actionButtons = new HBox(10); // Space between buttons
+        actionButtons.setAlignment(Pos.CENTER_RIGHT);
+        Button editButton = new Button("Edit");
+        editButton.setStyle("-fx-background-color: #ffc107; -fx-text-fill: black; -fx-font-size: 14px;");
+        editButton.setOnAction(e -> handleEditTask(task));
+
+        Button removeButton = new Button("Remove");
+        removeButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-size: 14px;");
+        removeButton.setOnAction(e -> handleRemoveTask(task));
+        actionButtons.getChildren().addAll(editButton, removeButton);
+
+        // Add padding and space for the task box
+        taskBox.setPadding(new Insets(15)); // Space inside the task box
+        taskBox.setMinHeight(100); // Minimum height for a spacious look
+        taskBox.getChildren().addAll(completeCheckBox, taskDetails, actionButtons);
+
+        // Adjust horizontal growth and alignment
+        HBox.setHgrow(taskDetails, Priority.ALWAYS); // Ensure details expand properly
+
+        return taskBox;
+    }
+
+
+    
+
+    private void toggleTaskCompletion(Task task) {
+        if (task.getIsCompleted()) {
+            dataManager.uncompleteTask(task.getTaskId()); // Method to mark as incomplete
+        } else {
+            dataManager.completeTask(task.getTaskId());
+        }
+        refreshTaskContainer();
+    }
+    
 
     private void handleRemoveTask(Task task) {
         try {
             dataManager.removeTask(task.getTaskId());
-            refreshTaskTable();
+            refreshTaskContainer();
         } catch (IOException e) {
             showError("Failed to remove task. Try again.");
         }
     }
 
-    private void refreshTaskTable() {
-        taskList.setAll(dataManager.getAllTasks());
-        taskTable.setItems(taskList);
+    private void handleEditTask(Task task) {
+        // Handle edit functionality (e.g., show dialog to edit task details)
+        showError("Edit functionality is not implemented yet.");
     }
 
     private void showError(String message) {
@@ -153,3 +190,4 @@ public class FXMLController {
         alert.showAndWait();
     }
 }
+
