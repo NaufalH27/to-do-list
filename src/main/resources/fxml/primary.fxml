@@ -2,10 +2,30 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<AnchorPane id="AnchorPane" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.uns.todolist.FXMLController">
-    <children>
-        <Button layoutX="756.0" layoutY="397.0" onAction="#btnClickAction" prefHeight="64.0" prefWidth="112.0" text="Click Me!" />
-        <Label fx:id="lblOut" layoutX="689.0" layoutY="264.0" minHeight="16" minWidth="69" prefHeight="52.0" prefWidth="215.0" />
-    </children>
-</AnchorPane>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="org.uns.todolist.FXMLController"
+      spacing="10" alignment="TOP_CENTER" style="-fx-padding: 20; -fx-background-color: #f4f4f4; -fx-font-family: 'Arial';">
+    
+    <!-- Title -->
+    <Label text="To-Do List" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+
+    <!-- Form to Add Task -->
+    <HBox spacing="10" alignment="CENTER">
+        <TextField fx:id="taskNameField" promptText="Task Name" style="-fx-font-size: 14;"/>
+        <TextField fx:id="deadlineField" promptText="Deadline (dd/mm/yyyy)" style="-fx-font-size: 14;"/>
+        <Button text="Add Task" fx:id="addTaskButton" onAction="#handleAddTask" style="-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <!-- Table to Display Tasks -->
+    <TableView fx:id="taskTable" style="-fx-border-color: #ddd;">
+        <columns>
+            <TableColumn text="ID" fx:id="idColumn" prefWidth="50"/>
+            <TableColumn text="Task Name" fx:id="nameColumn" prefWidth="200"/>
+            <TableColumn text="Deadline" fx:id="deadlineColumn" prefWidth="120"/>
+            <TableColumn text="Status" fx:id="statusColumn" prefWidth="80"/>
+            <TableColumn text="Actions" fx:id="actionsColumn" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+</VBox>
