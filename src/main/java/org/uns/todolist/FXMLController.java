@@ -181,9 +181,55 @@ public class FXMLController {
     }
 
     private void handleEditTask(Task task) {
-        // Handle edit functionality (e.g., show dialog to edit task details)
-        showError("Edit functionality is not implemented yet.");
+        // Create a dialog for editing the task
+        TextField taskNameField = new TextField(task.getNamaTask());
+        TextField deadlineField = new TextField(
+            task.getDeadline() != null ? new SimpleDateFormat("dd/MM/yyyy").format(task.getDeadline()) : ""
+        );
+    
+        VBox dialogContent = new VBox(10);
+        dialogContent.getChildren().addAll(
+            new Label("Task Name:"), taskNameField,
+            new Label("Deadline (dd/MM/yyyy):"), deadlineField
+        );
+    
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+        dialog.setTitle("Edit Task");
+        dialog.setHeaderText("Edit Task Details");
+        dialog.getDialogPane().setContent(dialogContent);
+    
+        // Wait for user response
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                String newName = taskNameField.getText().trim();
+                String newDeadlineText = deadlineField.getText().trim();
+                Date newDeadline = null;
+    
+                // Validate inputs
+                if (newName.isEmpty()) {
+                    showError("Task name cannot be empty.");
+                    return;
+                }
+    
+                if (!newDeadlineText.isEmpty()) {
+                    try {
+                        newDeadline = new SimpleDateFormat("dd/MM/yyyy").parse(newDeadlineText);
+                    } catch (Exception e) {
+                        showError("Invalid deadline format. Use dd/MM/yyyy.");
+                        return;
+                    }
+                }
+    
+                try {
+                    dataManager.editTask(task.getTaskId(), newName, newDeadline);
+                    refreshTaskContainer();
+                } catch (Exception e) {
+                    showError("Failed to edit the task. Try again.");
+                }
+            }
+        });
     }
+    
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);

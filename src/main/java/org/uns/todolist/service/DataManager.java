@@ -100,11 +100,21 @@ public class DataManager {
                 .collect(Collectors.toList()); 
     }
 
-    public void editTask(int taskId, String newName, Date newDeadline) {
-        Task edittedTask = getTaskById(taskId);
-        edittedTask.setNamaTask(newName);
-        edittedTask.setDeadline(newDeadline);
+    public void editTask(int taskId, String newName, Date newDeadline) throws IOException {
+        Task editedTask = getTaskById(taskId);
+    
+        if (editedTask == null) {
+            throw new IllegalArgumentException("Task with ID " + taskId + " not found.");
+        }
+    
+        // Update task details
+        editedTask.setNamaTask(newName);
+        editedTask.setDeadline(newDeadline);
+    
+        // Save updated data to persistent storage
+        this.persistence.save(this.data);
     }
+    
     
     private Task getTaskById(int taskId) {
         List<Task> tasks = this.data.getTasks();
