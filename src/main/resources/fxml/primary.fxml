@@ -5,21 +5,20 @@
 <?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="org.uns.todolist.FXMLController"
-      spacing="10" alignment="TOP_CENTER" style="-fx-padding: 20; -fx-background-color: #f4f4f4; -fx-font-family: 'Arial';">
+      spacing="10" alignment="TOP_CENTER">
 
     <!-- Title -->
-    <Label text="To-Do List" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
-
-    <!-- Form to Add Task -->
-    <HBox spacing="10" alignment="CENTER">
-        <TextField fx:id="taskNameField" promptText="Task Name" style="-fx-font-size: 14;"/>
-        <TextField fx:id="deadlineField" promptText="Deadline (dd/MM/yyyy)" style="-fx-font-size: 14;"/>
-        <Button text="Add Task" fx:id="addTaskButton" onAction="#handleAddTask" style="-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold;"/>
-    </HBox>
+    <Label text="To-Do List" id="title"/>
 
     <!-- Scrollable Container for Tasks -->
-    <ScrollPane fx:id="taskScrollPane" style="-fx-fit-to-width: true; -fx-background-color: transparent;">
-        <VBox fx:id="taskContainer" spacing="10" style="-fx-padding: 10; -fx-background-color: #fff;"/>
+    <ScrollPane fx:id="taskScrollPane" id="taskScrollPane">
+        <VBox fx:id="taskContainer" id="taskContainer"/>
     </ScrollPane>
+
+
+    <HBox spacing="10" alignment="CENTER" id="addTaskForm">
+        <TextField fx:id="taskNameField" promptText="Add Todo" HBox.hgrow="ALWAYS"/>
+        <Button text="Add" fx:id="addTaskButton" onAction="#handleAddTask"/>
+    </HBox>
 
 </VBox>
