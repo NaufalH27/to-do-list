@@ -5,20 +5,25 @@
 <?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="org.uns.todolist.FXMLController"
-      spacing="10" alignment="TOP_CENTER">
+      spacing="10" alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
 
-    <!-- Title -->
-    <Label text="To-Do List" id="title"/>
+    <Label text="To-Do List" id="title" VBox.vgrow="NEVER"/>
 
-    <!-- Scrollable Container for Tasks -->
-    <ScrollPane fx:id="taskScrollPane" id="taskScrollPane">
-        <VBox fx:id="taskContainer" id="taskContainer"/>
+    <HBox fx:id="addContainer" id="addContainer" VBox.vgrow="ALWAYS" alignment="CENTER">
+        <VBox fx:id="addTaskForm" id="addTaskForm" HBox.hgrow="ALWAYS" alignment="TOP_CENTER" spacing="10">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="taskNameField" promptText="Add Todo" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="cancelTaskButton" alignment="CENTER_RIGHT"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <ScrollPane fx:id="taskScrollPane" id="taskScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" fitToHeight="true">
+        <VBox fx:id="taskContainer" id="taskContainer" VBox.vgrow="ALWAYS" alignment="TOP_LEFT" spacing="10">
+            <Region VBox.vgrow="ALWAYS"/>
+        </VBox>
     </ScrollPane>
 
-
-    <HBox spacing="10" alignment="CENTER" id="addTaskForm">
-        <TextField fx:id="taskNameField" promptText="Add Todo" HBox.hgrow="ALWAYS"/>
-        <Button text="Add" fx:id="addTaskButton" onAction="#handleAddTask"/>
-    </HBox>
+ 
 
 </VBox>

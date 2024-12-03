@@ -12,19 +12,31 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class FXMLController {
+
+    private final DataManager dataManager;
+
+    public FXMLController(DataManager dataManager) {
+        this.dataManager = dataManager;
+    }
 
     @FXML
     private TextField taskNameField;
@@ -37,22 +49,121 @@ public class FXMLController {
 
     @FXML
     private VBox taskContainer;
+    
+    @FXML
+    private HBox addContainer;
 
-    private final DataManager dataManager;
+    @FXML
+    private ScrollPane taskScrollPane;
 
-    public FXMLController(DataManager dataManager) {
-        this.dataManager = dataManager;
-    }
+    @FXML
+    private Button cancelTaskButton; 
+
+    @FXML
+    private VBox dateContainer;
+
+    @FXML
+    private VBox addTaskForm;
+
+    private final ObjectProperty<AppFlag> flag = new SimpleObjectProperty<>(AppFlag.FREE);
+
+ 
 
     @FXML
     public void initialize() {
+        cancelTaskButton.setGraphic(new FontIcon("fas-plus"));
+        taskNameField.setFocusTraversable(false);
+        taskScrollPane.requestFocus();
+        scrollSpeedListener(500);
+        inputFieldListener();
+        setupFlagListener();
         refreshTaskContainer();
+
     }
 
+
+
     @FXML
-    public void handleAddTask() {
+    private void inputFieldListener() {
+        taskNameField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                flag.set(AppFlag.CREATE);
+            } 
+        });
+
+        cancelTaskButton.setOnAction(event -> {
+            if (flag.get() == AppFlag.CREATE) {
+                flag.set(AppFlag.FREE); 
+            } else if (flag.get() == AppFlag.FREE) {
+                flag.set(AppFlag.CREATE); 
+            }
+        });
+
+    }
+
+
+    private void setupFlagListener() {
+        flag.addListener((observable, oldFlag, newFlag) -> {
+            if (newFlag == AppFlag.CREATE) {
+                addContainer.setMaxHeight(200);
+                addContainer.setMinHeight(200);
+                Node dateInput = loadFXML("focusedInput");
+                
+                addTaskForm.getChildren().add(dateInput);
+                cancelTaskButton.setGraphic(new FontIcon("fas-times"));
+
+                Button addButton = (Button) addTaskForm.lookup("#addTaskButton");
+                DatePicker datePicker = (DatePicker) addTaskForm.lookup("#datePicker");
+                addButton.setOnAction(e -> handleAddTask(datePicker));
+            }
+
+            if(newFlag == AppFlag.FREE) {
+                addContainer.setMaxHeight(80);
+                addContainer.setMinHeight(80);
+                Node dateContainer = addTaskForm.lookup("#dateContainer");
+                if (dateContainer != null) {
+                    addTaskForm.getChildren().remove(dateContainer);
+                }
+                cancelTaskButton.setGraphic(new FontIcon("fas-plus"));
+                taskNameField.clear();
+            }
+        });
+    }
+    
+
+ 
+
+    private void scrollSpeedListener(double scrollSpeed) {
+        taskScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        taskScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+    
+        taskScrollPane.setOnScroll(event -> {
+            double deltaY = event.getDeltaY() * scrollSpeed;
+            double newVvalue = taskScrollPane.getVvalue() - deltaY;
+            newVvalue = Math.min(Math.max(newVvalue, 0.0), 1.0);
+            taskScrollPane.setVvalue(newVvalue);
+            event.consume();
+        });
+    }
+    
+  
+    @FXML 
+    public Node loadFXML(String fileName) {
+        try {   
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/" + fileName + ".fxml"));
+            return loader.load();   
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new VBox(20);
+        }
+    }
+    
+    
+    @FXML
+    public void handleAddTask(DatePicker datePicker) {
         String taskName = taskNameField.getText().trim();
-        String deadlineText = deadlineField.getText().trim();
+        String dateText = datePicker.getEditor().getText().trim();
+
 
         if (taskName.isEmpty()) {
             showError("Task Name cannot be empty.");
@@ -60,9 +171,9 @@ public class FXMLController {
         }
 
         Date deadline = null;
-        if (!deadlineText.isEmpty()) {
+        if (!dateText.isEmpty()) {
             try {
-                deadline = new SimpleDateFormat("dd/MM/yyyy").parse(deadlineText);
+                deadline = new SimpleDateFormat("dd/MM/yyyy").parse(dateText);
             } catch (Exception e) {
                 showError("Invalid deadline format. Use dd/MM/yyyy.");
                 return;
@@ -72,8 +183,7 @@ public class FXMLController {
         try {
             dataManager.addTask(taskName, deadline);
             refreshTaskContainer();
-            taskNameField.clear();
-            deadlineField.clear();
+            this.flag.set(AppFlag.FREE);
         } catch (IOException e) {
             showError("Failed to add task. Try again.");
         }
@@ -81,25 +191,30 @@ public class FXMLController {
 
     private void refreshTaskContainer() {
         taskContainer.getChildren().clear();
-    
-        List<Task> sortedTasks = dataManager.getAllTasks()
-                .stream()
-                .sorted(Comparator
-                        .comparing(Task::getIsCompleted)
-                        .thenComparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())))
-                .collect(Collectors.toList());
-    
         Date today = getDayToday();
+        List<Task> sortedTasks = dataManager.getAllTasks()
+        .stream()
+        .sorted(Comparator
+            .   comparing((Task task) -> task.getCompletedDate() == null ? 0 : 1) 
+                .thenComparing((Task task) -> task.getCompletedDate() == null ? Long.MAX_VALUE : task.getCompletedDate().getTime(), Comparator.reverseOrder())
+                .thenComparing((Task task) -> task.getIsCompleted() ? 1 : 0) 
+                .thenComparing(task -> task.getDeadline() != null && task.getDeadline().before(today) ? 1 : 0) 
+                .thenComparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()))
+        )
+        .collect(Collectors.toList());
+
     
         for (Task task : sortedTasks) {
             HBox taskBox = createTaskBox(task);
             VBox taskDetails = (VBox) taskBox.getChildren().get(1);
+            Label taskNameLabel = (Label) taskDetails.getChildren().get(0);
             Label deadlineLabel = (Label) taskDetails.getChildren().get(1);
     
             taskBox.getStyleClass().removeAll("task-box-completed", "task-box-overdue", "task-box-today");
             deadlineLabel.getStyleClass().removeAll("deadline-label-overdue", "deadline-label-today");
-    
+
             if (task.getIsCompleted()) {
+                taskNameLabel.getStyleClass().add("task-name-completed");
                 taskBox.getStyleClass().add("task-box-completed");
             }
     
@@ -118,11 +233,11 @@ public class FXMLController {
 
     private HBox createTaskBox(Task task) {
         HBox taskBox = new HBox(20);
-        taskBox.getStyleClass().add("task-box"); // Add base style class
+        taskBox.getStyleClass().add("task-box"); 
         taskBox.setAlignment(Pos.CENTER_LEFT);
     
         CheckBox completeCheckBox = new CheckBox();
-        completeCheckBox.setStyle("-fx-scale-x: 1.5; -fx-scale-y: 1.5;");
+        completeCheckBox.getStyleClass().add("check-box");
         completeCheckBox.setSelected(task.getIsCompleted());
         completeCheckBox.setOnAction(e -> toggleTaskCompletion(task));
     
@@ -131,9 +246,6 @@ public class FXMLController {
     
         Label taskNameLabel = new Label(task.getNamaTask());
         taskNameLabel.getStyleClass().add("task-name");
-        if (task.getIsCompleted()) {
-            taskNameLabel.getStyleClass().add("task-name-completed");
-        }
     
         Label deadlineLabel = new Label(task.getDeadline() != null
                 ? new SimpleDateFormat("d MMM yyyy").format(task.getDeadline())
@@ -165,18 +277,20 @@ public class FXMLController {
     }
     
 
-    
-
     private void toggleTaskCompletion(Task task) {
-        if (task.getIsCompleted()) {
-            dataManager.uncompleteTask(task.getTaskId()); // Method to mark as incomplete
-        } else {
-            dataManager.completeTask(task.getTaskId());
+        try {
+            if (task.getIsCompleted()) {
+                dataManager.uncompleteTask(task.getTaskId());
+            } else {
+                dataManager.completeTask(task.getTaskId());
+            }
+            refreshTaskContainer();
+        } catch (IOException e) {
+            showError("Failed to complete task. Try again.");
         }
-        refreshTaskContainer();
+       
     }
     
-
     private void handleRemoveTask(Task task) {
         try {
             dataManager.removeTask(task.getTaskId());
