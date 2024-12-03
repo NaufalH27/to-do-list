@@ -100,7 +100,11 @@ public class DataManager {
                 .collect(Collectors.toList()); 
     }
 
-
+    public void editTask(int taskId, String newName, Date newDeadline) {
+        Task edittedTask = getTaskById(taskId);
+        edittedTask.setNamaTask(newName);
+        edittedTask.setDeadline(newDeadline);
+    }
     
     private Task getTaskById(int taskId) {
         List<Task> tasks = this.data.getTasks();
@@ -120,4 +124,6 @@ public class DataManager {
                     
         return task;
     }
+
+
 }

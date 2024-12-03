@@ -7,9 +7,9 @@ public class Task {
 
     //getter only
     private final int taskId;
-    private final String namaTask;
+    private String namaTask;
     private final Date created;
-    private final Date deadline;
+    private Date deadline;
 
     //getter and setter
     private Boolean isCompleted = false;
@@ -60,6 +60,14 @@ public class Task {
     public void uncompleteTask() {
         this.isCompleted = false;
         this.completedDate = null;
+    }
+
+    public void setNamaTask(String namaTask) {
+        this.namaTask = namaTask;
+    }
+
+    public void setDeadline(Date deadline) {
+        this.deadline = deadline;
     }
 
 }
