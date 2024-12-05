@@ -2,16 +2,22 @@ package org.uns.todolist;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
@@ -29,6 +35,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 public class FXMLController {
 
@@ -45,7 +52,7 @@ public class FXMLController {
     private TextField deadlineField;
 
     @FXML
-    private Button addTaskButton;
+    private VBox calendarContainer;
 
     @FXML
     private VBox taskContainer;
@@ -65,6 +72,15 @@ public class FXMLController {
     @FXML
     private VBox addTaskForm;
 
+    @FXML
+private Label Month;
+
+    @FXML
+    private Label date;
+
+    @FXML
+    private Label greeting;
+
     private final ObjectProperty<AppFlag> flag = new SimpleObjectProperty<>(AppFlag.FREE);
 
  
@@ -78,7 +94,19 @@ public class FXMLController {
         inputFieldListener();
         setupFlagListener();
         refreshTaskContainer();
-
+        updateDate();
+        updateGreeting(); 
+              Timeline timeline = new Timeline(new KeyFrame(Duration.minutes(1), e -> {
+            updateDate();
+            updateGreeting();
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+        VBox navCalendar = new NavigationCalendar();
+        calendarContainer.getChildren().add(navCalendar);
+        VBox.setVgrow(navCalendar, Priority.ALWAYS);
+		HBox.setHgrow(navCalendar, Priority.ALWAYS);
+    
     }
 
 
@@ -319,6 +347,32 @@ public class FXMLController {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
+    }
+
+    private void updateDate() {
+        LocalDate currentDate = LocalDate.now();
+        String monthName = currentDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+        String dayOfMonth = String.valueOf(currentDate.getDayOfMonth());
+
+        Month.setText(monthName);
+        date.setText(dayOfMonth);
+    }
+
+    private void updateGreeting() {
+        LocalTime currentTime = LocalTime.now();
+        String greetingText;
+
+        if (currentTime.isBefore(LocalTime.NOON)) {
+            greetingText = "Selamat Pagi!"; 
+        } else if (currentTime.isBefore(LocalTime.of(15, 0))) {
+            greetingText = "Selamat Siang!"; 
+        } else if (currentTime.isBefore(LocalTime.of(18, 0))) {
+            greetingText = "Selamat Sore!"; 
+        } else {
+            greetingText = "Selamat Malam!"; 
+        }
+
+        greeting.setText(greetingText);
     }
 }
 
