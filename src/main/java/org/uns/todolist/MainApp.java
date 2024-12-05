@@ -26,18 +26,15 @@ public class MainApp extends Application {
         setRoot(fxmlLoader, stage);
     }
 
-    static void setRoot(FXMLLoader fxmlLoader, Stage stage) throws IOException {
-        //inisiasi objek yang dibutuhkan aplikasi
-        DataPersistence dataPersistence = createDataPersistence();
-        SaveData saveData = loadSaveData(dataPersistence);
-        DataManager dataManager = createDataManager(saveData, dataPersistence);
-        
+    void setRoot(FXMLLoader fxmlLoader, Stage stage) throws IOException {
+        FXMLController controller = generateController();
         //mulai aplikasi
-        fxmlLoader.setControllerFactory(param -> new FXMLController(dataManager));
-
+        fxmlLoader.setControllerFactory(param -> controller);
         //setup stage
         Parent root = fxmlLoader.load();
         Scene scene = new Scene(root, 1280, 720);
+        String cssFile = MainApp.class.getResource("/styles/Styles.css").toExternalForm();
+        scene.getStylesheets().add(cssFile);
         stage.setTitle(TITLE);
         stage.setScene(scene);
         stage.show();
@@ -47,11 +44,21 @@ public class MainApp extends Application {
     }
 
 
-    private static DataPersistence createDataPersistence() {
+    private FXMLController generateController() throws IOException {
+        DataPersistence dataPersistence = createDataPersistence();
+        SaveData saveData = loadSaveData(dataPersistence);
+        DataManager dataManager = createDataManager(saveData, dataPersistence);
+        
+        //mulai aplikasi
+        return new FXMLController(dataManager);
+    }
+
+
+    private DataPersistence createDataPersistence() {
         return new DataPersistence();
     }
 
-    private static SaveData loadSaveData(DataPersistence dataPersistence) throws IOException {
+    private SaveData loadSaveData(DataPersistence dataPersistence) throws IOException {
         try {
             SaveData loadedData = dataPersistence.loadSavedData();
 
@@ -65,7 +72,7 @@ public class MainApp extends Application {
         }
     }
 
-    private static DataManager createDataManager(SaveData saveData, DataPersistence dataPersistence) {
+    private DataManager createDataManager(SaveData saveData, DataPersistence dataPersistence) {
         return new DataManager(saveData, dataPersistence);
     }
 

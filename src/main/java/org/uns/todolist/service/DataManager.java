@@ -27,7 +27,6 @@ public class DataManager {
      * @throws IllegalArgumentException jika nama task null atau kosong.
      * @throws IOException jika terjadi kesalahan saat menyimpan data task.
      */
-
     public void addTask(String namaTask, Date deadline) throws IOException {
         if (namaTask == null || namaTask.trim().isEmpty()) {
             throw new IllegalArgumentException("Nama Aktivitas Tidak Boleh Kosong");
@@ -63,14 +62,16 @@ public class DataManager {
      * @param taskId ID task yang akan ditandai sebagai selesai.
      * @throws IllegalArgumentException jika task dengan ID yang ditentukan tidak ditemukan.
      */
-    public void completeTask(int taskId) {
+    public void completeTask(int taskId) throws IOException {
         Task taskToComplete = this.getTaskById(taskId);
         taskToComplete.completeTask();
+        this.persistence.save(this.data);
     }
 
-    public void uncompleteTask(int taskId) {
+    public void uncompleteTask(int taskId) throws IOException {
         Task taskToComplete = this.getTaskById(taskId);
         taskToComplete.uncompleteTask();
+        this.persistence.save(this.data);
     }
 
     /**

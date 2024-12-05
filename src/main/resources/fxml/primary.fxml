@@ -4,22 +4,76 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="org.uns.todolist.FXMLController"
-      spacing="10" alignment="TOP_CENTER" style="-fx-padding: 20; -fx-background-color: #f4f4f4; -fx-font-family: 'Arial';">
+<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="org.uns.todolist.FXMLController" 
+    spacing="10" alignment="TOP_CENTER" style="-fx-padding: 28 28 28 10; -fx-background-color: white;" >
+    <GridPane fx:id="rootGridPane" alignment="TOP_CENTER" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="60" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="40"/>
+        </columnConstraints>
 
-    <!-- Title -->
-    <Label text="To-Do List" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+        <rowConstraints>
+            <RowConstraints vgrow="ALWAYS"/>
+        </rowConstraints>
 
-    <!-- Form to Add Task -->
-    <HBox spacing="10" alignment="CENTER">
-        <TextField fx:id="taskNameField" promptText="Task Name" style="-fx-font-size: 14;"/>
-        <TextField fx:id="deadlineField" promptText="Deadline (dd/MM/yyyy)" style="-fx-font-size: 14;"/>
-        <Button text="Add Task" fx:id="addTaskButton" onAction="#handleAddTask" style="-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold;"/>
-    </HBox>
+        <VBox GridPane.columnIndex="0" 
+            GridPane.halignment="CENTER" 
+            GridPane.valignment="TOP"
+            style="-fx-padding-top: 24;"
+            spacing="10" alignment="TOP_CENTER" VBox.vgrow="ALWAYS" maxWidth="880">
 
-    <!-- Scrollable Container for Tasks -->
-    <ScrollPane fx:id="taskScrollPane" style="-fx-fit-to-width: true; -fx-background-color: transparent;">
-        <VBox fx:id="taskContainer" spacing="10" style="-fx-padding: 10; -fx-background-color: #fff;"/>
-    </ScrollPane>
+            <HBox fx:id="titleContainer" VBox.vgrow="NEVER" alignment="BOTTOM_LEFT" spacing="30">
+                <!-- Date Section -->
+                <VBox styleClass="date-month-container" alignment="BOTTOM_CENTER">
+                    <Label fx:id="Month" text="Feb" styleClass="month-label"/>
+                    <Label fx:id="date" text="4" styleClass="date-label"/>
+                </VBox>
+                <!-- Greeting Section -->
+               <VBox alignment="BOTTOM_LEFT" spacing="0" style="-fx-padding: 0;">
+                    <Label fx:id="greeting" text="Good Afternoon" styleClass="greeting-label"/>
+                    <Label fx:id="planAskLabel" text="Mau Ngapain Hari Ini ?" styleClass="plan-ask-label"/>
+                </VBox>
+            </HBox>
+            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 0 0 24;" spacing="10" alignment="TOP_LEFT">
+                <HBox fx:id="addContainer" id="addContainer" VBox.vgrow="ALWAYS" alignment="CENTER">
+                    <VBox fx:id="addTaskForm" id="addTaskForm" HBox.hgrow="ALWAYS" alignment="TOP_CENTER" spacing="10">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <TextField fx:id="taskNameField" promptText="Add Todo" HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="cancelTaskButton" alignment="CENTER_RIGHT"/>
+                        </HBox>
+                    </VBox>
+                </HBox>
 
-</VBox>
+                <ScrollPane fx:id="taskScrollPane" id="taskScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" fitToHeight="true" >
+                    <VBox fx:id="taskContainer" id="taskContainer" VBox.vgrow="ALWAYS" alignment="TOP_LEFT" spacing="10">
+                        <Region VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+        </VBox>
+            
+
+        <GridPane fx:id="controlContainer" style="-fx-padding: 10;" GridPane.columnIndex="1" vgap="32"
+            alignment="TOP_CENTER" HBox.hgrow="ALWAYS">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <rowConstraints>
+                <RowConstraints percentHeight="60" vgrow="ALWAYS"/> 
+                <RowConstraints percentHeight="40" vgrow="ALWAYS"/> 
+            </rowConstraints>
+
+            <VBox fx:id="calendarContainer" GridPane.rowIndex="0" 
+                GridPane.halignment="CENTER" 
+                GridPane.valignment="TOP" alignment="TOP_CENTER" maxWidth="440">
+               
+            </VBox>
+
+            <VBox fx:id="additionalContainer" GridPane.rowIndex="1" style="-fx-padding: 14;" alignment="CENTER" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+            </VBox>
+        </GridPane>
+    </GridPane>
+
+</HBox>
+
