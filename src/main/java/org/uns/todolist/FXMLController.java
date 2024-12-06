@@ -1,27 +1,33 @@
 package org.uns.todolist;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.TextStyle;
-import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.uns.todolist.helper.DayHelper;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
+import org.uns.todolist.ui.DateInputField;
+import org.uns.todolist.ui.NavigationCalendar;
 
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -34,22 +40,14 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 public class FXMLController {
-
-    private final DataManager dataManager;
-
-    public FXMLController(DataManager dataManager) {
-        this.dataManager = dataManager;
-    }
-
     @FXML
     private TextField taskNameField;
-
-    @FXML
-    private TextField deadlineField;
 
     @FXML
     private VBox calendarContainer;
@@ -67,13 +65,10 @@ public class FXMLController {
     private Button cancelTaskButton; 
 
     @FXML
-    private VBox dateContainer;
-
-    @FXML
     private VBox addTaskForm;
 
     @FXML
-private Label Month;
+    private Label Month;
 
     @FXML
     private Label date;
@@ -81,229 +76,138 @@ private Label Month;
     @FXML
     private Label greeting;
 
-    private final ObjectProperty<AppFlag> flag = new SimpleObjectProperty<>(AppFlag.FREE);
 
+    private final NavigationCalendar navCalendar;
+    private final ObjectProperty<StateFlag> stateFlag = new SimpleObjectProperty<>(StateFlag.FREE);
+    private final ObjectProperty<HBox> edittedTaskBox = new SimpleObjectProperty<>(null);
+    private double savedVValue = 0;
+    private final DataManager dataManager;
+    private static final double SCROLL_SPEED = 500;
+    private Function<List<Task>, List<Task>> sortMethod;
+    private Function<List<Task>, List<Task>> filterMethod;
+
+    public FXMLController(DataManager dataManager) {
+        this.dataManager = dataManager;
+        this.navCalendar = new NavigationCalendar();
+        VBox.setVgrow(navCalendar, Priority.ALWAYS);
+		HBox.setHgrow(navCalendar, Priority.ALWAYS);
+    }
  
 
     @FXML
     public void initialize() {
+        //one time
+        calendarContainer.getChildren().add(navCalendar);
         cancelTaskButton.setGraphic(new FontIcon("fas-plus"));
+
+        //dynamic
         taskNameField.setFocusTraversable(false);
-        taskScrollPane.requestFocus();
-        scrollSpeedListener(500);
-        inputFieldListener();
-        setupFlagListener();
+        taskContainerListener();
+        addTaskFieldListener();
+        adjustScrollSpeed(SCROLL_SPEED);
+        flagListener();
         refreshTaskContainer();
         updateDate();
         updateGreeting(); 
-              Timeline timeline = new Timeline(new KeyFrame(Duration.minutes(1), e -> {
-            updateDate();
-            updateGreeting();
-        }));
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
-        VBox navCalendar = new NavigationCalendar();
-        calendarContainer.getChildren().add(navCalendar);
-        VBox.setVgrow(navCalendar, Priority.ALWAYS);
-		HBox.setHgrow(navCalendar, Priority.ALWAYS);
-    
+        navCalendar.refreshCalendar();
     }
 
 
 
     @FXML
-    private void inputFieldListener() {
+    private void addTaskFieldListener() {
         taskNameField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                flag.set(AppFlag.CREATE);
+                stateFlag.set(StateFlag.CREATE);
             } 
         });
-
         cancelTaskButton.setOnAction(event -> {
-            if (flag.get() == AppFlag.CREATE) {
-                flag.set(AppFlag.FREE); 
-            } else if (flag.get() == AppFlag.FREE) {
-                flag.set(AppFlag.CREATE); 
+            if (stateFlag.get() == StateFlag.CREATE) {
+                stateFlag.set(StateFlag.FREE); 
+            } else {
+                stateFlag.set(StateFlag.CREATE); 
             }
         });
-
     }
 
 
-    private void setupFlagListener() {
-        flag.addListener((observable, oldFlag, newFlag) -> {
-            if (newFlag == AppFlag.CREATE) {
-                addContainer.setMaxHeight(200);
-                addContainer.setMinHeight(200);
-                Node dateInput = loadFXML("focusedInput");
-                
-                addTaskForm.getChildren().add(dateInput);
+    private void flagListener() {
+        stateFlag.addListener((observable, oldFlag, newFlag) -> {
+            //create task state
+            if (newFlag == StateFlag.CREATE) {  
+                animateResize(addContainer, 200, Duration.seconds(0.3));
+                taskNameField.setPromptText("Nama Aktivitas");
                 cancelTaskButton.setGraphic(new FontIcon("fas-times"));
-
-                Button addButton = (Button) addTaskForm.lookup("#addTaskButton");
+                Button addTaskButton = new Button("ADD");
+                addTaskButton.getStyleClass().add("add-task-button"); 
+                HBox addButtonContainer = new HBox(addTaskButton);
+                addButtonContainer.setAlignment(Pos.BOTTOM_RIGHT); 
+                HBox dateInputField = DateInputField.createDateInputField();
+                dateInputField.getChildren().add(addButtonContainer);
+                addTaskForm.getChildren().add(dateInputField);
                 DatePicker datePicker = (DatePicker) addTaskForm.lookup("#datePicker");
-                addButton.setOnAction(e -> handleAddTask(datePicker));
-            }
-
-            if(newFlag == AppFlag.FREE) {
-                addContainer.setMaxHeight(80);
-                addContainer.setMinHeight(80);
+                addTaskButton.setOnAction(e -> handleAddTask(datePicker));
+                taskNameField.requestFocus();
+            } else if (oldFlag == StateFlag.CREATE && newFlag != StateFlag.CREATE) {
+                animateResize(addContainer, 80, Duration.seconds(0.3));
                 Node dateContainer = addTaskForm.lookup("#dateContainer");
                 if (dateContainer != null) {
                     addTaskForm.getChildren().remove(dateContainer);
-                }
+                } 
                 cancelTaskButton.setGraphic(new FontIcon("fas-plus"));
                 taskNameField.clear();
+                taskNameField.setPromptText("Tambah Aktivitas...");
+            }
+            //edit task state
+            if (newFlag == StateFlag.EDIT) {
+                animateResize(edittedTaskBox.get(), 200, Duration.seconds(0.3));
+            } else if (oldFlag == StateFlag.EDIT && newFlag != StateFlag.EDIT) {
+                animateResize(edittedTaskBox.get(), 80, Duration.seconds(0.3));
+                edittedTaskBox.set(null);
+                refreshTaskContainer();
             }
         });
     }
-    
-
- 
-
-    private void scrollSpeedListener(double scrollSpeed) {
-        taskScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        taskScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-    
-        taskScrollPane.setOnScroll(event -> {
-            double deltaY = event.getDeltaY() * scrollSpeed;
-            double newVvalue = taskScrollPane.getVvalue() - deltaY;
-            newVvalue = Math.min(Math.max(newVvalue, 0.0), 1.0);
-            taskScrollPane.setVvalue(newVvalue);
-            event.consume();
-        });
-    }
-    
-  
-    @FXML 
-    public Node loadFXML(String fileName) {
-        try {   
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/" + fileName + ".fxml"));
-            return loader.load();   
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new VBox(20);
-        }
-    }
-    
     
     @FXML
-    public void handleAddTask(DatePicker datePicker) {
-        String taskName = taskNameField.getText().trim();
-        String dateText = datePicker.getEditor().getText().trim();
-
-
-        if (taskName.isEmpty()) {
-            showError("Task Name cannot be empty.");
-            return;
-        }
-
-        Date deadline = null;
-        if (!dateText.isEmpty()) {
-            try {
-                deadline = new SimpleDateFormat("dd/MM/yyyy").parse(dateText);
-            } catch (Exception e) {
-                showError("Invalid deadline format. Use dd/MM/yyyy.");
-                return;
-            }
-        }
-
-        try {
+    private void handleAddTask(DatePicker datePicker) {
+        try{
+            String taskName = taskNameField.getText().trim();
+            Date deadline = getDateFromDatePickerInput(datePicker);
             dataManager.addTask(taskName, deadline);
+            this.stateFlag.set(StateFlag.FREE);
             refreshTaskContainer();
-            this.flag.set(AppFlag.FREE);
         } catch (IOException e) {
-            showError("Failed to add task. Try again.");
-        }
+            showError("gagal menambahkan aktivitas. coba lagi.");
+        } catch (IllegalArgumentException e) {
+            showError(e.getMessage());
+        } catch (ParseException e) {
+            showError("format tangga salah. pakai dd/MM/yyyy.");
+        } 
     }
 
     private void refreshTaskContainer() {
         taskContainer.getChildren().clear();
-        Date today = getDayToday();
-        List<Task> sortedTasks = dataManager.getAllTasks()
-        .stream()
-        .sorted(Comparator
-            .   comparing((Task task) -> task.getCompletedDate() == null ? 0 : 1) 
-                .thenComparing((Task task) -> task.getCompletedDate() == null ? Long.MAX_VALUE : task.getCompletedDate().getTime(), Comparator.reverseOrder())
-                .thenComparing((Task task) -> task.getIsCompleted() ? 1 : 0) 
-                .thenComparing(task -> task.getDeadline() != null && task.getDeadline().before(today) ? 1 : 0) 
-                .thenComparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()))
-        )
-        .collect(Collectors.toList());
-
-    
-        for (Task task : sortedTasks) {
-            HBox taskBox = createTaskBox(task);
-            VBox taskDetails = (VBox) taskBox.getChildren().get(1);
-            Label taskNameLabel = (Label) taskDetails.getChildren().get(0);
-            Label deadlineLabel = (Label) taskDetails.getChildren().get(1);
-    
-            taskBox.getStyleClass().removeAll("task-box-completed", "task-box-overdue", "task-box-today");
-            deadlineLabel.getStyleClass().removeAll("deadline-label-overdue", "deadline-label-today");
+        List<Task> tasks = dataManager.getAllTasks();
+        for (Task task : tasks) {
+            HBox taskBox;
+            if(edittedTaskBox.get() != null && (int) edittedTaskBox.get().getUserData() == task.getTaskId()) {
+                taskBox = edittedTaskBox.get();
+            } else {
+                taskBox = createTaskBox(task);
+            }
 
             if (task.getIsCompleted()) {
-                taskNameLabel.getStyleClass().add("task-name-completed");
                 taskBox.getStyleClass().add("task-box-completed");
+            } else {
+                taskBox.getStyleClass().clear();
+                taskBox.getStyleClass().add("task-box");
             }
-    
-            if (!task.getIsCompleted() && task.getDeadline() != null && task.getDeadline().before(today)) {
-                deadlineLabel.getStyleClass().add("deadline-label-overdue");
-            }
-    
-            if (!task.getIsCompleted() && task.getDeadline() != null && task.getDeadline().equals(today)) {
-                deadlineLabel.getStyleClass().add("deadline-label-today");
-            }
-    
-            taskContainer.getChildren().add(taskBox);
-        }
-    }
-    
 
-    private HBox createTaskBox(Task task) {
-        HBox taskBox = new HBox(20);
-        taskBox.getStyleClass().add("task-box"); 
-        taskBox.setAlignment(Pos.CENTER_LEFT);
-    
-        CheckBox completeCheckBox = new CheckBox();
-        completeCheckBox.getStyleClass().add("check-box");
-        completeCheckBox.setSelected(task.getIsCompleted());
-        completeCheckBox.setOnAction(e -> toggleTaskCompletion(task));
-    
-        VBox taskDetails = new VBox(8);
-        taskDetails.setAlignment(Pos.CENTER_LEFT);
-    
-        Label taskNameLabel = new Label(task.getNamaTask());
-        taskNameLabel.getStyleClass().add("task-name");
-    
-        Label deadlineLabel = new Label(task.getDeadline() != null
-                ? new SimpleDateFormat("d MMM yyyy").format(task.getDeadline())
-                : "No Deadline");
-        deadlineLabel.getStyleClass().add("deadline-label");
-        taskDetails.getChildren().addAll(taskNameLabel, deadlineLabel);
-    
-        HBox actionButtons = new HBox(15);
-        actionButtons.setAlignment(Pos.CENTER_RIGHT);
-    
-        Button editButton = new Button();
-        editButton.setGraphic(new FontIcon("fas-pencil-alt"));
-        editButton.getStyleClass().add("button-edit");
-        editButton.setOnAction(e -> handleEditTask(task));
-    
-        Button removeButton = new Button();
-        removeButton.setGraphic(new FontIcon("fas-trash"));
-        removeButton.getStyleClass().add("button-remove");
-        removeButton.setOnAction(e -> handleRemoveTask(task));
-    
-        actionButtons.getChildren().addAll(editButton, removeButton);
-    
-        taskBox.setMinHeight(80);
-        taskBox.getChildren().addAll(completeCheckBox, taskDetails, actionButtons);
-    
-        HBox.setHgrow(taskDetails, Priority.ALWAYS);
-    
-        return taskBox;
+            taskContainer.getChildren().add(taskBox);      
+        }
+        taskScrollPane.setVvalue(savedVValue);
     }
-    
 
     private void toggleTaskCompletion(Task task) {
         try {
@@ -322,84 +226,57 @@ private Label Month;
     private void handleRemoveTask(Task task) {
         try {
             dataManager.removeTask(task.getTaskId());
-            refreshTaskContainer();
+            refreshTaskContainer();     
         } catch (IOException e) {
             showError("Failed to remove task. Try again.");
         }
     }
 
-    private void handleEditTask(Task task) {
-        // Create a dialog for editing the task
-        TextField taskNameField = new TextField(task.getNamaTask());
-        TextField deadlineField = new TextField(
-            task.getDeadline() != null ? new SimpleDateFormat("dd/MM/yyyy").format(task.getDeadline()) : ""
-        );
-    
-        VBox dialogContent = new VBox(10);
-        dialogContent.getChildren().addAll(
-            new Label("Task Name:"), taskNameField,
-            new Label("Deadline (dd/MM/yyyy):"), deadlineField
-        );
-    
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
-        dialog.setTitle("Edit Task");
-        dialog.setHeaderText("Edit Task Details");
-        dialog.getDialogPane().setContent(dialogContent);
-    
-        // Wait for user response
-        dialog.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                String newName = taskNameField.getText().trim();
-                String newDeadlineText = deadlineField.getText().trim();
-                Date newDeadline = null;
-    
-                // Validate inputs
-                if (newName.isEmpty()) {
-                    showError("Task name cannot be empty.");
-                    return;
-                }
-    
-                if (!newDeadlineText.isEmpty()) {
-                    try {
-                        newDeadline = new SimpleDateFormat("dd/MM/yyyy").parse(newDeadlineText);
-                    } catch (Exception e) {
-                        showError("Invalid deadline format. Use dd/MM/yyyy.");
-                        return;
-                    }
-                }
-    
-                try {
-                    dataManager.editTask(task.getTaskId(), newName, newDeadline);
-                    refreshTaskContainer();
-                } catch (Exception e) {
-                    showError("Failed to edit the task. Try again.");
-                }
-            }
-        });
+    private void handleEditButton(HBox taskBox, Task task) {   
+        HBox checkboxContainer = new HBox();
+        checkboxContainer.setAlignment(Pos.TOP_CENTER);
+        checkboxContainer.setPadding(new Insets(0, 0, 0, 0));
+        CheckBox completeCheckBox = new CheckBox();
+        completeCheckBox.getStyleClass().add("check-box");
+        completeCheckBox.setSelected(task.getIsCompleted());
+        completeCheckBox.setOnAction(e -> toggleTaskCompletion(task));
+        checkboxContainer.getChildren().add(completeCheckBox);
+        
+        taskBox.getChildren().clear();
+        VBox editBox = createEditBox(task);
+        animateResize(taskBox, 200, Duration.seconds(0.3));
+        taskBox.getChildren().addAll(checkboxContainer, editBox);
+        edittedTaskBox.set(taskBox);
+    }
+
+    private void handleCancelEditButton() {
+        stateFlag.set(StateFlag.FREE);
+    }
+
+    private void handleConfirmEditTask(Task task, TextField textField, DatePicker datePicker) {
+        try {
+            String newName = textField.getText(); 
+            Date newDeadline = getDateFromDatePickerInput(datePicker);
+            dataManager.editTask(task.getTaskId(), newName, newDeadline);
+            animateResize(edittedTaskBox.get(), 80, Duration.seconds(0.3));
+            stateFlag.set(StateFlag.FREE);
+        } catch (ParseException e) {
+            showError("format tangga salah. pakai dd/MM/yyyy.");
+        } catch (IOException e) {
+            showError("gagal menambahkan aktivitas. coba lagi.");
+        } 
+        
     }
     
-
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.showAndWait();
     }
 
-    private Date getDayToday() {
-        Date today = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(today);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
-    }
-
     private void updateDate() {
         LocalDate currentDate = LocalDate.now();
-        String monthName = currentDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+        String monthName = currentDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase();
         String dayOfMonth = String.valueOf(currentDate.getDayOfMonth());
-
         Month.setText(monthName);
         date.setText(dayOfMonth);
     }
@@ -407,7 +284,6 @@ private Label Month;
     private void updateGreeting() {
         LocalTime currentTime = LocalTime.now();
         String greetingText;
-
         if (currentTime.isBefore(LocalTime.NOON)) {
             greetingText = "Selamat Pagi!"; 
         } else if (currentTime.isBefore(LocalTime.of(15, 0))) {
@@ -420,5 +296,200 @@ private Label Month;
 
         greeting.setText(greetingText);
     }
+
+    private Date getDateFromDatePickerInput(DatePicker datePicker) throws ParseException {
+        String dateText = datePicker.getEditor().getText().trim();
+        Date date = null;
+        if (!dateText.isEmpty()) {
+            date = new SimpleDateFormat("dd/MM/yyyy").parse(dateText);
+        }
+        return date;
+    }
+
+    private void taskContainerListener() {
+        taskScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+            savedVValue = newValue.doubleValue(); 
+        });
+
+        taskContainer.getChildren().addListener((ListChangeListener<Node>) change -> {
+            Platform.runLater(() -> {
+                while (change.next()) {
+                    if (change.wasAdded() && taskContainer.getChildren().size() > 1) {
+                        // Remove the "Tidak Ada Aktivitas" label if it exists
+                        taskContainer.getChildren().removeIf(node -> 
+                            node instanceof StackPane && 
+                            ((StackPane) node).getChildren().stream()
+                                .anyMatch(child -> child instanceof Label && "Tidak Ada Aktivitas".equals(((Label) child).getText()))
+                        );
+                    }
+
+                    if (taskContainer.getChildren().isEmpty()) {
+                        Label noActivityLabel = new Label("Tidak Ada Aktivitas");
+                        noActivityLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: gray");
+                        noActivityLabel.setMaxWidth(Double.MAX_VALUE);
+                        noActivityLabel.setMaxHeight(Double.MAX_VALUE);
+                        noActivityLabel.setWrapText(true);
+
+                        VBox labelWrapper = new VBox(noActivityLabel);
+                        labelWrapper.setAlignment(Pos.CENTER); 
+                        noActivityLabel.setAlignment(Pos.CENTER); 
+                        HBox.setHgrow(labelWrapper, Priority.ALWAYS);
+                        VBox.setVgrow(labelWrapper, Priority.ALWAYS);
+                        labelWrapper.setPadding(new Insets(-70, 0, 0, 0));
+                        taskContainer.getChildren().add(labelWrapper);
+                    }
+                }
+            });
+        });
+        
+
+        edittedTaskBox.addListener((observable, oldFlag, newFlag) -> {
+            if (newFlag != null) {
+                if (oldFlag != null) {
+                    refreshTaskContainer();
+                }
+                TextField editTaskNameField = (TextField) edittedTaskBox.get().lookup("#editTaskNameField");
+                if (editTaskNameField != null) {
+                    editTaskNameField.requestFocus();
+                    editTaskNameField.positionCaret(editTaskNameField.getText().length());  
+                } 
+                stateFlag.set(StateFlag.EDIT);
+            } 
+        });
+    }
+
+    private void adjustScrollSpeed(double speed) {
+        taskScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        taskScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        taskScrollPane.setOnScroll(event -> {
+            double deltaY = event.getDeltaY() * speed;
+            double newVvalue = taskScrollPane.getVvalue() - deltaY;
+            newVvalue = Math.min(Math.max(newVvalue, 0.0), 1.0);
+            taskScrollPane.setVvalue(newVvalue);
+            event.consume();
+        });
+    }
+
+    private void animateResize(Region box, double newHeight, Duration duration) {
+        Timeline timeline = new Timeline();
+        KeyValue maxHeightKeyValue = new KeyValue(box.maxHeightProperty(), newHeight);
+        KeyValue minHeightKeyValue = new KeyValue(box.minHeightProperty(), newHeight);
+        KeyFrame keyFrame = new KeyFrame(duration, maxHeightKeyValue, minHeightKeyValue);    
+        timeline.getKeyFrames().add(keyFrame);    
+        timeline.play();
+    }
+
+    private HBox createTaskBox(Task task) {
+        HBox taskBox = new HBox(20);
+        taskBox.setUserData(task.getTaskId());
+        taskBox.getStyleClass().add("task-box"); 
+        taskBox.setAlignment(Pos.CENTER_LEFT);
+    
+        CheckBox completeCheckBox = new CheckBox();
+        completeCheckBox.getStyleClass().add("check-box");
+        completeCheckBox.setSelected(task.getIsCompleted());
+        completeCheckBox.setOnAction(e -> toggleTaskCompletion(task));
+    
+        VBox taskDetails = new VBox(8);
+        taskDetails.setAlignment(Pos.CENTER_LEFT);
+    
+        Label taskNameLabel = new Label(task.getNamaTask());
+        taskNameLabel.getStyleClass().add("task-name");
+    
+        FontIcon clockIcon = new FontIcon("fas-clock");
+        clockIcon.getStyleClass().add("clock-icon");
+        Label deadlineLabel = new Label(task.getDeadline() != null
+                ? new SimpleDateFormat("d MMM yyyy").format(task.getDeadline())
+                : "Tidak Ada Deadline");
+        deadlineLabel.getStyleClass().add("deadline-label");
+        HBox deadlineBox = new HBox(5); 
+        deadlineBox.setAlignment(Pos.CENTER_LEFT);
+        deadlineBox.getChildren().addAll(clockIcon, deadlineLabel);
+
+        taskDetails.getChildren().addAll(taskNameLabel, deadlineBox);
+        HBox actionButtons = new HBox(20);
+        actionButtons.setAlignment(Pos.CENTER_RIGHT);
+    
+        Button editButton = new Button();
+        editButton.setGraphic(new FontIcon("fas-pencil-alt"));
+        editButton.getStyleClass().add("button-edit");
+        editButton.setOnAction(e -> handleEditButton(taskBox, task));
+    
+        Button removeButton = new Button();
+        removeButton.setGraphic(new FontIcon("fas-trash"));
+        removeButton.getStyleClass().add("button-remove");
+        removeButton.setOnAction(e -> handleRemoveTask(task));
+    
+        actionButtons.getChildren().addAll(editButton, removeButton);
+    
+        taskBox.setMinHeight(80);
+        taskBox.getChildren().addAll(completeCheckBox, taskDetails, actionButtons);
+    
+        HBox.setHgrow(taskDetails, Priority.ALWAYS);
+        Date today = DayHelper.getDayToday();
+
+        if (!task.getIsCompleted() && task.getDeadline() != null && task.getDeadline().before(today)) {
+            deadlineLabel.getStyleClass().add("deadline-label-overdue");
+        }
+
+        if (!task.getIsCompleted() && task.getDeadline() != null && task.getDeadline().equals(today)) {
+            deadlineLabel.getStyleClass().add("deadline-label-today");
+        }
+
+        return taskBox;
+    }
+
+    private VBox createEditBox(Task task) {
+        VBox editContainer = new VBox();
+        editContainer.setAlignment(javafx.geometry.Pos.TOP_CENTER);
+        HBox.setHgrow(editContainer, Priority.ALWAYS);
+        VBox.setVgrow(editContainer, Priority.ALWAYS);
+
+        HBox inputContainer = new HBox();
+        inputContainer.setSpacing(10);
+        inputContainer.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        TextField editTaskNameField = new TextField(task.getNamaTask());
+        editTaskNameField.setId("editTaskNameField");
+        editTaskNameField.setPromptText("Nama Aktivitas");
+        editTaskNameField.getStyleClass().add("edit-name-field");
+        HBox.setHgrow(editTaskNameField, Priority.ALWAYS);
+        HBox actionButtons = new HBox(20);
+        actionButtons.setAlignment(Pos.CENTER_RIGHT);
+    
+        Button confirmButton = new Button();
+        confirmButton.setGraphic(new FontIcon("fas-check"));
+        confirmButton.getStyleClass().add("action-button-edit");
+    
+        Button removeButton = new Button();
+        removeButton.setGraphic(new FontIcon("fas-trash"));
+        removeButton.getStyleClass().add("action-button-edit-trash");
+        HBox RemoveButtonContainer = new HBox(removeButton);
+        RemoveButtonContainer.setAlignment(Pos.BOTTOM_RIGHT); 
+
+        Button cancelButton = new Button();
+        cancelButton.setGraphic(new FontIcon("fas-times"));
+        cancelButton.getStyleClass().add("action-button-edit");
+
+        actionButtons.getChildren().addAll(confirmButton, cancelButton);
+        inputContainer.getChildren().addAll(editTaskNameField, actionButtons);
+
+        HBox dateEdit = DateInputField.createDateInputField();
+        dateEdit.getChildren().add(RemoveButtonContainer);
+        editContainer.getChildren().addAll(inputContainer, dateEdit);
+        DatePicker datePicker = (DatePicker) editContainer.lookup("#datePicker");
+        if (task.getDeadline() != null) {
+            datePicker.setValue(task.getDeadline().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        } else {
+            datePicker.setValue(null);
+        }
+        removeButton.setOnAction(e -> handleRemoveTask(task));
+        cancelButton.setOnAction(e -> handleCancelEditButton());
+        confirmButton.setOnAction(e -> handleConfirmEditTask(task, editTaskNameField, datePicker));
+
+        return editContainer;
+    }
+
+    
 }
 

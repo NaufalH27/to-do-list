@@ -1,6 +1,6 @@
 package org.uns.todolist;
 
-public enum AppFlag {
+public enum StateFlag {
     CREATE,
     EDIT,
     FREE

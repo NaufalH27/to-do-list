@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.uns.todolist.models.SaveData;
 import org.uns.todolist.models.Task;
@@ -50,6 +49,11 @@ public class DataManager {
      */
     public void removeTask(int taskId)  throws IOException {
         Task taskToRemove = this.getTaskById(taskId);
+        
+        if (taskToRemove == null) {
+            throw new IllegalArgumentException("Task not found.");
+        }
+        
         this.data.removeTask(taskToRemove);
         
         //save data
@@ -70,6 +74,9 @@ public class DataManager {
 
     public void uncompleteTask(int taskId) throws IOException {
         Task taskToComplete = this.getTaskById(taskId);
+        if (taskToComplete == null) {
+            throw new IllegalArgumentException("Task not found.");
+        }
         taskToComplete.uncompleteTask();
         this.persistence.save(this.data);
     }
@@ -79,51 +86,28 @@ public class DataManager {
      * 
      * @return Daftar task yang telah selesai.
      */
-    public List<Task> getAllTasks() {
-        return new ArrayList<>(this.data.getTasks());
-    }
-
-    //mengembalikan semua task yang sudah di tandakan selesai (isComplete = true)
-    public List<Task> getCompletedTasks() {
-        return this.data.getTasks().stream()
-                .filter(Task::getIsCompleted)
-                .collect(Collectors.toList()); 
-    }
-
-    /**
-     * Mengambil semua task yang belum selesai.
-     * 
-     * @return Daftar task yang belum selesai.
-     */
-    public List<Task> getIncompleteTasks() {
-        return this.data.getTasks().stream()
-                .filter(task -> !task.getIsCompleted())
-                .collect(Collectors.toList()); 
+    public List<Task> getAllTasks() {     
+        List<Task> copyOfTasks = new ArrayList<>(this.data.getTasks());
+        return copyOfTasks;
     }
 
     public void editTask(int taskId, String newName, Date newDeadline) throws IOException {
         Task editedTask = getTaskById(taskId);
-    
         if (editedTask == null) {
-            throw new IllegalArgumentException("Task with ID " + taskId + " not found.");
+            throw new IllegalArgumentException("Task not found.");
         }
-    
-        // Update task details
         editedTask.setNamaTask(newName);
         editedTask.setDeadline(newDeadline);
-    
-        // Save updated data to persistent storage
         this.persistence.save(this.data);
     }
     
     
     private Task getTaskById(int taskId) {
         List<Task> tasks = this.data.getTasks();
-
         if (tasks == null) {
             throw new IllegalArgumentException("internal error");
         }
-    
+        
         if (tasks.isEmpty()) {
             throw new IllegalArgumentException("Aktivitas Kosong");
         }

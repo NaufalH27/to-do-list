@@ -37,22 +37,15 @@ public class MainApp extends Application {
         scene.getStylesheets().add(cssFile);
         stage.setTitle(TITLE);
         stage.setScene(scene);
-        stage.show();
-
-
-       
+        stage.show();    
     }
-
 
     private FXMLController generateController() throws IOException {
         DataPersistence dataPersistence = createDataPersistence();
         SaveData saveData = loadSaveData(dataPersistence);
         DataManager dataManager = createDataManager(saveData, dataPersistence);
-        
-        //mulai aplikasi
         return new FXMLController(dataManager);
     }
-
 
     private DataPersistence createDataPersistence() {
         return new DataPersistence();
@@ -61,12 +54,10 @@ public class MainApp extends Application {
     private SaveData loadSaveData(DataPersistence dataPersistence) throws IOException {
         try {
             SaveData loadedData = dataPersistence.loadSavedData();
-
             if (loadedData == null) {
                 return dataPersistence.recreateSaveFile();
             }
             return loadedData;
-
         } catch (IOException | JsonSyntaxException e) {
             return dataPersistence.recreateSaveFile();
         }
@@ -75,7 +66,6 @@ public class MainApp extends Application {
     private DataManager createDataManager(SaveData saveData, DataPersistence dataPersistence) {
         return new DataManager(saveData, dataPersistence);
     }
-
     
     public static void main(String[] args) {
         launch(args);

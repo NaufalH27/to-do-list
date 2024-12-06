@@ -1,4 +1,4 @@
-package org.uns.todolist;
+package org.uns.todolist.ui;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -24,6 +24,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
+
+/*
+ * Objek berikut di dapatkan dari projek open source
+ * berikut link refrensinya : https://github.com/JKostikiadis/JFXCalendar
+ */
 
 public class NavigationCalendar extends VBox {
 
@@ -113,9 +118,7 @@ public class NavigationCalendar extends VBox {
 			rowConstraints.setVgrow(Priority.ALWAYS);
 			navigationCalendarGrid.getRowConstraints().add(rowConstraints);
 		}
-
 		
-
 		navigationCalendarGrid.setPadding(new Insets(10, 0, 0, 0));
 		refreshCalendar();
 		
