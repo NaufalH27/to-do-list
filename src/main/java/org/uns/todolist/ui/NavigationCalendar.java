@@ -3,10 +3,6 @@ package org.uns.todolist.ui;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -35,6 +31,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 
 /*
  * Objek berikut di dapatkan dari projek open source
@@ -51,6 +48,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 
 	private GridPane navigationCalendarGrid;
 	private Button selectedCalendarCell;
+	private HBox navigationPane;
 
 	private IntegerProperty currentYearProperty = new SimpleIntegerProperty();
 	private StringProperty currentMonthProperty = new SimpleStringProperty();
@@ -72,13 +70,15 @@ public class NavigationCalendar extends VBox implements UiObserver {
 
 	private void updateDates(List<Task> tasks) {
 		this.taskDates = tasks.stream()
-			.map(Task::getDeadline)              
-			.filter(Objects::nonNull)            
+			.filter(task -> task.getIsCompleted() != null && !task.getIsCompleted()) 
+			.map(Task::getDeadline) 
+			.filter(Objects::nonNull) 
 			.map(deadline -> deadline.toInstant() 
 				.atZone(ZoneId.systemDefault())  
-				.toLocalDate())                  
-			.collect(Collectors.toUnmodifiableSet());  
+				.toLocalDate())  
+			.collect(Collectors.toUnmodifiableSet()); 
 	}
+	
 
 
 	public NavigationCalendar(List<Task> tasks) {
@@ -88,7 +88,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		setPadding(new Insets(30, 20, 15, 20));
 
 		// Toolbar pane
-		HBox navigationPane = new HBox(10);
+		this.navigationPane = new HBox(10);
 		navigationPane.setAlignment(Pos.CENTER); // Center-align everything
 
 		// Initialize current selected date
@@ -96,48 +96,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		createCalendarGrid();
 		getChildren().addAll(navigationPane, navigationCalendarGrid);
 
-		// Tool bar controls initialization
-		Label yearLabel = new Label();
-		Label monthLabel = new Label();
-
-		yearLabel.textProperty().bind(currentYearProperty.asString()); // Bind year
-		monthLabel.textProperty().bind(currentMonthProperty);          // Bind month
-
-		yearLabel.setId("calendar_year_label");
-		monthLabel.setId("calendar_month_label");
-
-		// Stack year and month labels vertically
-		VBox dateContainer = new VBox(5, yearLabel, monthLabel);
-		dateContainer.setAlignment(Pos.CENTER);
-
-		// Navigation buttons
-		FontIcon previousMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_LEFT);
-		FontIcon nextMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_RIGHT);
-
-		Button prevMonthButton = new Button();
-		Button nextMonthButton = new Button();
-
-		prevMonthButton.getStyleClass().add("circle_buttom_sm");
-		nextMonthButton.getStyleClass().add("circle_buttom_sm");
-
-		prevMonthButton.setGraphic(previousMonthIcon);
-		nextMonthButton.setGraphic(nextMonthIcon);
-
-		// Button actions
-		prevMonthButton.setOnAction(e -> {
-			moveMonthBackwardOnNavCalendar();
-			refreshCalendar();
-			clearSelection();
-		});
-
-		nextMonthButton.setOnAction(e -> {
-			moveMonthForwardOnNavCalendar();
-			refreshCalendar();
-			clearSelection();
-		});
-
-		// Add everything to the navigationPane
-		navigationPane.getChildren().addAll(prevMonthButton, dateContainer, nextMonthButton);
+		
 	}
 
 	private void createCalendarGrid() {
@@ -158,6 +117,76 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		navigationCalendarGrid.setPadding(new Insets(10, 0, 0, 0));
 		this.refreshCalendar();
 	}
+
+	private void refreshNavigationPane() {
+		// Tool bar controls initialization
+		Label yearLabel = new Label();
+		Label monthLabel = new Label();
+
+		yearLabel.textProperty().bind(currentYearProperty.asString()); // Bind year
+		monthLabel.textProperty().bind(currentMonthProperty);          // Bind month
+
+		yearLabel.setId("calendar_year_label");
+		monthLabel.setId("calendar_month_label");
+
+		// Stack year and month labels vertically
+		VBox dateContainer = new VBox(5, yearLabel, monthLabel);
+		dateContainer.setAlignment(Pos.CENTER);
+
+		// Navigation buttons
+		FontIcon previousMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_LEFT);
+		FontIcon nextMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_RIGHT);
+		previousMonthIcon.setIconSize(20);
+		nextMonthIcon.setIconSize(20);
+
+		Button prevMonthButton = new Button();
+		Button nextMonthButton = new Button();
+
+		prevMonthButton.getStyleClass().add("circle_buttom_sm");
+		nextMonthButton.getStyleClass().add("circle_buttom_sm");
+
+		prevMonthButton.setGraphic(previousMonthIcon);
+		nextMonthButton.setGraphic(nextMonthIcon);
+
+		boolean isTaskPreviousMonthExist = taskDates.stream()
+        .anyMatch(date -> date.getYear() < selectedDate.getYear() || 
+                          (date.getYear() == selectedDate.getYear() && date.getMonthValue() < selectedDate.getMonthValue()));
+
+		boolean isTaskAfterMonthExist = taskDates.stream()
+				.anyMatch(date -> date.getYear() > selectedDate.getYear() || 
+								(date.getYear() == selectedDate.getYear() && date.getMonthValue() > selectedDate.getMonthValue()));
+
+		if(isTaskPreviousMonthExist) {
+			previousMonthIcon.setIconColor(Paint.valueOf(BEFORE_TODAY_COLOR));
+		} else {
+			previousMonthIcon.setIconColor(Paint.valueOf("black"));
+		}
+
+		if(isTaskAfterMonthExist) {
+			nextMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
+		} else {
+			previousMonthIcon.setIconColor(Paint.valueOf("black"));
+		}
+		
+
+		// Button actions
+		prevMonthButton.setOnAction(e -> {
+			moveMonthBackwardOnNavCalendar();
+			refreshCalendar();
+			clearSelection();
+		});
+
+		nextMonthButton.setOnAction(e -> {
+			moveMonthForwardOnNavCalendar();
+			refreshCalendar();
+			clearSelection();
+		});
+
+		navigationPane.getChildren().clear();
+		navigationPane.getChildren().addAll(prevMonthButton, dateContainer, nextMonthButton);
+	}
+
+
 
 	public void refreshCalendar() {
 		// Remove all the nodes inside the 'calendar'
@@ -205,8 +234,9 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			LocalDate currDateIteration = LocalDate.of(prevMonthDate.getYear(), prevMonthDate.getMonthValue(), dayIndex);
 			if(taskDates.contains(currDateIteration)) {
 				String currentStyle = dayButton.getStyle();
-				dayButton.setStyle(currentStyle + "-fx-background-color:" + BEFORE_TODAY_COLOR + "; -fx-opacity: 0.7");
+				dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(BEFORE_TODAY_COLOR, 0.7) );
 			}
+			
 			navigationCalendarGrid.add(dayButton, col++, row);
 			this.adjustButton(dayButton);
 		}
@@ -237,7 +267,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 	
 			if (i == markedCell.get()) {
 				// Highlight the selected day
-				dayButton.setStyle("-fx-background-color : #4285F4 ; -fx-text-fill : white");
+				dayButton.setStyle("-fx-background-color : #c0c0c0 ; -fx-text-fill : black;");
 				selectedCalendarCell = dayButton;
 			}
 	
@@ -259,13 +289,15 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			LocalDate currentDateIteration = LocalDate.of(nextMonth.getYear(),nextMonth.getMonthValue(), currentDateIncrement);
 			if (taskDates.contains(currentDateIteration)) {
 				String currentStyle = dayButton.getStyle();
-				dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR + ";-fx-opacity: 0.7");
+				dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(AFTER_TODAY_COLOR, 0.7));
 			}
 			navigationCalendarGrid.add(dayButton, col, row);
 			this.adjustButton(dayButton);
 			currentDateIncrement++;
 			col++;
 		}
+
+		this.refreshNavigationPane();
 	}
 			
 	public void select(int day) {
@@ -278,6 +310,10 @@ public class NavigationCalendar extends VBox implements UiObserver {
 
 	private Button createCalendarCell(String text, int monthIndex) {
 		Button button = new Button(text);
+		button.setPrefWidth(28); 
+		button.setPrefHeight(25); 
+		button.setStyle("-fx-alignment: center; -fx-font-size: 11;");
+
 
 		button.setOnAction(e -> {
 			clearSelection();
@@ -364,5 +400,17 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		GridPane.setHalignment(dayButton, HPos.CENTER); 
 		GridPane.setValignment(dayButton, VPos.CENTER);
 	}
-	
+
+
+	private static String lightenHexColor(String hex, double factor) {
+        hex = hex.replace("#", "");
+        int r = Integer.parseInt(hex.substring(0, 2), 16);
+        int g = Integer.parseInt(hex.substring(2, 4), 16);
+        int b = Integer.parseInt(hex.substring(4, 6), 16);
+        r = (int) Math.min(255, r + (255 - r) * factor);
+        g = (int) Math.min(255, g + (255 - g) * factor);
+        b = (int) Math.min(255, b + (255 - b) * factor);
+        return String.format("#%02x%02x%02x", r, g, b);
+    }
 }
+	

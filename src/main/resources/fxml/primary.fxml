@@ -19,22 +19,22 @@
         <VBox GridPane.columnIndex="0" 
             GridPane.halignment="CENTER" 
             GridPane.valignment="TOP"
-            style="-fx-padding: 12 0 0 24;"
+            style="-fx-padding: 8 0 0 14;"
             spacing="10" alignment="TOP_CENTER" VBox.vgrow="ALWAYS" maxWidth="880">
 
-            <HBox fx:id="titleContainer" VBox.vgrow="NEVER" alignment="BOTTOM_LEFT" spacing="30">
+            <HBox fx:id="titleContainer" VBox.vgrow="NEVER" alignment="CENTER_LEFT" spacing="25">
                 <!-- Date Section -->
-                <VBox styleClass="date-month-container" alignment="BOTTOM_CENTER">
+                <VBox styleClass="date-month-container" spacing="0" alignment="CENTER">
                     <Label fx:id="Month" text="Feb" styleClass="month-label"/>
                     <Label fx:id="date" text="4" styleClass="date-label"/>
                 </VBox>
                 <!-- Greeting Section -->
-               <VBox alignment="BOTTOM_LEFT" spacing="0" style="-fx-padding: 0;">
+               <VBox alignment="CENTER_LEFT" spacing="0" style="-fx-padding: 0;">
                     <Label fx:id="greeting" text="Good Afternoon" styleClass="greeting-label"/>
                     <Label fx:id="planAskLabel" text="Mau Ngapain Hari Ini ?" styleClass="plan-ask-label"/>
                 </VBox>
             </HBox>
-            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 0 0 24;" spacing="10" alignment="TOP_LEFT">
+            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 0 0 28;" spacing="10" alignment="TOP_LEFT">
                 <HBox fx:id="addContainer" id="addContainer" VBox.vgrow="ALWAYS" alignment="CENTER">
                     <VBox fx:id="addTaskForm" id="addTaskForm" HBox.hgrow="ALWAYS" alignment="TOP_CENTER" spacing="10">
                         <HBox spacing="10" alignment="CENTER_LEFT">
@@ -60,8 +60,8 @@
             </columnConstraints>
 
             <rowConstraints>
-                <RowConstraints percentHeight="50" vgrow="ALWAYS"/> 
-                <RowConstraints percentHeight="50" vgrow="ALWAYS"/> 
+                <RowConstraints percentHeight="60" vgrow="ALWAYS"/> 
+                <RowConstraints percentHeight="40" vgrow="ALWAYS"/> 
             </rowConstraints>
 
             <VBox fx:id="calendarContainer" GridPane.rowIndex="0" 
@@ -69,9 +69,32 @@
                 GridPane.valignment="TOP" alignment="TOP_CENTER" maxWidth="380">
                
             </VBox>
+            <VBox  GridPane.rowIndex="1" style="-fx-padding: 0 10 0 10;" alignment="TOP_CENTER" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" >
+                <VBox  style="-fx-padding: 0 0 0 30;" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" maxWidth="440" >
+                    <!-- Sort Section -->
+                    <Label text="SORT" styleClass="section-title"/>
+                    <HBox spacing="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
+                        <Button text="Default" styleClass="sort-button"/>
+                        <Button text="Recent" styleClass="sort-button"/>
+                        <Button text="Oldest" styleClass="sort-button"/>
+                        <Button text="Name" styleClass="sort-button"/>
+                    </HBox>
 
-            <VBox fx:id="additionalContainer" GridPane.rowIndex="1" style="-fx-padding: 14;" alignment="CENTER" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+                    <Region VBox.vgrow="NEVER" prefHeight="40"/> 
+                    <!-- Filter Section -->
+                    <Label text="FILTER" styleClass="section-title"/>
+                    <!-- Use FlowPane instead of HBox for wrapping -->
+                    <FlowPane hgap="8" vgap="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
+                        <Button text="Completed" styleClass="filter-button"/>
+                        <Button text="Incomplete" styleClass="filter-button"/>
+                        <Button text="Today" styleClass="filter-button"/>
+                        <Button text="Past" styleClass="filter-button"/>
+                        <Button text="No Deadline" styleClass="filter-button"/>
+                        <Button text="Future" styleClass="filter-button"/>
+                    </FlowPane>
+                </VBox>
             </VBox>
+
         </GridPane>
     </GridPane>
 

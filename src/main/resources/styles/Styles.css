@@ -55,30 +55,33 @@
 /* Light Theme CSS */
 .month-label {
     -fx-font-family: "Roboto Extra Bold";
-    -fx-font-size: 24px;
+    -fx-font-size: 30px;
     -fx-text-fill: #141414; /* Dark gray color */
     -fx-font-weight: bold;
+    -fx-padding: 8 0 0 0 ;
 }
 
 .date-label {
     -fx-font-family: "Roboto Extra Bold";
-    -fx-font-size: 32px;
+    -fx-font-size: 30px;
     -fx-font-weight: bold;
     -fx-text-fill: #141414; /* Black for strong emphasis */
+    -fx-padding: -10 0 0 0 ;
 }
 
 .greeting-label {
     -fx-font-family: "Roboto";
-    -fx-font-size: 48px;
+    -fx-font-size: 46px;
     -fx-font-weight: bold;
     -fx-text-fill: black; /* Black for bold titles */
 }
 
 .plan-ask-label {
+    -fx-padding: -22 0 0 0 ;
     -fx-font-family: "Roboto";
-    -fx-font-size: 24px;
+    -fx-font-size: 42px;
     -fx-font-weight: bold;
-    -fx-text-fill: #797979; /* Dark gray for subtle text */
+    -fx-text-fill: #959494; /* Dark gray for subtle text */
 }
 
 
@@ -578,3 +581,66 @@
 	-fx-background-insets: 2.0, 0.0, 0.0;
 	-fx-background-radius: 2.0em;
 }
+
+
+#buttonContainer {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 10px; 
+}
+
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+    -fx-padding: 0 0 5 0;
+}
+
+.sort-button {
+    -fx-background-color: #ffffff;
+    -fx-font-weight: bold;
+    -fx-border-color: #c9c9c9;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 8 12;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+
+    -fx-min-width: 100px; /* Minimum width */
+    -fx-pref-width: 100px; /* Preferred width */
+    -fx-max-width: 200px; /* Maximum width */
+    -fx-min-height: 50px; /* Minimum height */
+    -fx-pref-height: 60px; /* Preferred height */
+    -fx-max-height: 200px; /* Maximum height */
+
+}
+
+.filter-button {
+    -fx-background-color: #ffffff;
+    -fx-font-weight: bold;
+    -fx-border-color: #c9c9c9;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 8 12;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+
+    -fx-min-width: 100px; /* Minimum width */
+    -fx-pref-width: 100px; /* Preferred width */
+    -fx-max-width: 200px; /* Maximum width */
+    -fx-min-height: 50px; /* Minimum height */
+    -fx-pref-height: 40px; /* Preferred height */
+    -fx-max-height: 200px; /* Maximum height */
+
+}
+
+.sort-button:hover, .filter-button:hover {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #007bff;
+    -fx-border-width: 3px;
+}
+
+/* .selected {
+    -fx-background-color: #007bff;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #007bff;
+} */

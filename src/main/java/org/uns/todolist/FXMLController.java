@@ -16,6 +16,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.helper.DayHelper;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
+import org.uns.todolist.service.SortingMethod;
 import org.uns.todolist.ui.DateInputField;
 import org.uns.todolist.ui.NavigationCalendar;
 
@@ -190,7 +191,8 @@ public class FXMLController {
     private void refreshTaskContainer() {
         taskContainer.getChildren().clear();
         List<Task> tasks = dataManager.getAllTasks();
-        for (Task task : tasks) {
+        List<Task> sortedTasks = SortingMethod.defaultMethod(tasks);
+        for (Task task : sortedTasks) {
             HBox taskBox;
             if(edittedTaskBox.get() != null && (int) edittedTaskBox.get().getUserData() == task.getTaskId()) {
                 taskBox = edittedTaskBox.get();
