@@ -3,8 +3,12 @@ package org.uns.todolist.ui;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,7 +44,7 @@ import javafx.scene.paint.Paint;
 
 public class NavigationCalendar extends VBox implements UiObserver {
 	private static final String AFTER_TODAY_COLOR = "#A5D8A5";
-	private static final String BEFORE_TODAY_COLOR = "#FF6F61";
+	private static final String PAST_TODAY_COLOR = "#FF6F61";
 
 	private final int PREVIOUS = 0;
 	private final int CURRENT = 1;
@@ -147,27 +151,40 @@ public class NavigationCalendar extends VBox implements UiObserver {
 
 		prevMonthButton.setGraphic(previousMonthIcon);
 		nextMonthButton.setGraphic(nextMonthIcon);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy");
 
-		boolean isTaskPreviousMonthExist = taskDates.stream()
-        .anyMatch(date -> date.getYear() < selectedDate.getYear() || 
-                          (date.getYear() == selectedDate.getYear() && date.getMonthValue() < selectedDate.getMonthValue()));
-
-		boolean isTaskAfterMonthExist = taskDates.stream()
-				.anyMatch(date -> date.getYear() > selectedDate.getYear() || 
-								(date.getYear() == selectedDate.getYear() && date.getMonthValue() > selectedDate.getMonthValue()));
-
-		if(isTaskPreviousMonthExist) {
-			previousMonthIcon.setIconColor(Paint.valueOf(BEFORE_TODAY_COLOR));
-		} else {
-			previousMonthIcon.setIconColor(Paint.valueOf("black"));
-		}
-
-		if(isTaskAfterMonthExist) {
-			nextMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
-		} else {
-			previousMonthIcon.setIconColor(Paint.valueOf("black"));
-		}
+		LocalDate currentMonthFirstDay = LocalDate.of(selectedDate.getYear(), selectedDate.getDayOfMonth(), 1);
+		System.out.println(currentMonthFirstDay.format(formatter));
+		Optional<LocalDate> nearestBeforeCurrentMonth = taskDates.stream()
+                .filter(date -> date.isBefore(currentMonthFirstDay)) 
+                 .min(Comparator.comparingLong(date -> 
+						Math.abs(ChronoUnit.DAYS.between(date, currentMonthFirstDay)) 
+					));
 		
+		nearestBeforeCurrentMonth.ifPresent(date -> {
+			if (date.isBefore(selectedDate)) {
+				previousMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
+			} else {
+				previousMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
+			}
+		});
+
+		LocalDate currentMonthLastDay = LocalDate.of(selectedDate.getYear(), selectedDate.getDayOfMonth(), selectedDate.getDayOfMonth());
+		Optional<LocalDate> nearestAfterCurrentMonth = taskDates.stream()
+                .filter(date -> date.isAfter(currentMonthLastDay)) 
+                .min((d1, d2) -> {
+                    long diff1 = Math.abs(d1.until(selectedDate).getDays());
+                    long diff2 = Math.abs(d2.until(selectedDate).getDays());
+                    return Long.compare(diff1, diff2);
+                });
+
+		nearestAfterCurrentMonth.ifPresent(date -> {
+			if (date.isBefore(selectedDate)) {
+				nextMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
+			} else {
+				nextMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
+			}
+		});
 
 		// Button actions
 		prevMonthButton.setOnAction(e -> {
@@ -191,6 +208,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 	public void refreshCalendar() {
 		// Remove all the nodes inside the 'calendar'
 		navigationCalendarGrid.getChildren().clear();
+		this.refreshNavigationPane();
 	
 		// Add headers (days) and their tooltips
 		String tooltipText[] = CalendarEvent.DAYS_FULL_NAMES;
@@ -234,7 +252,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			LocalDate currDateIteration = LocalDate.of(prevMonthDate.getYear(), prevMonthDate.getMonthValue(), dayIndex);
 			if(taskDates.contains(currDateIteration)) {
 				String currentStyle = dayButton.getStyle();
-				dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(BEFORE_TODAY_COLOR, 0.7) );
+				dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(PAST_TODAY_COLOR, 0.7) );
 			}
 			
 			navigationCalendarGrid.add(dayButton, col++, row);
@@ -256,7 +274,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			if(taskDates.contains(currDateIteration)) {
 				String currentStyle = dayButton.getStyle();
 				if(currDateIteration.isBefore(currentDate)) {
-					dayButton.setStyle(currentStyle + "-fx-background-color:" + BEFORE_TODAY_COLOR + "; -fx-opacity: 1");
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + PAST_TODAY_COLOR + "; -fx-opacity: 1");
 				} else if (currDateIteration.isAfter(currentDate)) {
 					dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR);
 				}
@@ -296,8 +314,6 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			currentDateIncrement++;
 			col++;
 		}
-
-		this.refreshNavigationPane();
 	}
 			
 	public void select(int day) {
