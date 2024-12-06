@@ -12,6 +12,7 @@ import org.uns.todolist.models.Task;
 public class DataManager {
     private final SaveData data;
     private final DataPersistence persistence;
+    private final List<UiObserver> observers = new ArrayList<>();
 
     public DataManager(SaveData data, DataPersistence persistence) {
         this.data = data;
@@ -26,7 +27,7 @@ public class DataManager {
      * @throws IllegalArgumentException jika nama task null atau kosong.
      * @throws IOException jika terjadi kesalahan saat menyimpan data task.
      */
-    public void addTask(String namaTask, Date deadline) throws IOException {
+    public synchronized void addTask(String namaTask, Date deadline) throws IOException {
         if (namaTask == null || namaTask.trim().isEmpty()) {
             throw new IllegalArgumentException("Nama Aktivitas Tidak Boleh Kosong");
         }
@@ -38,6 +39,7 @@ public class DataManager {
         //save data
         this.data.incrementTaskId();
         this.persistence.save(this.data);
+        this.notifyObserver();
     }
 
     /**
@@ -47,7 +49,7 @@ public class DataManager {
      * @throws IllegalArgumentException jika task dengan ID yang ditentukan tidak ditemukan.
      * @throws IOException jika terjadi kesalahan saat menyimpan data setelah penghapusan.
      */
-    public void removeTask(int taskId)  throws IOException {
+    public synchronized void removeTask(int taskId)  throws IOException {
         Task taskToRemove = this.getTaskById(taskId);
         
         if (taskToRemove == null) {
@@ -58,6 +60,7 @@ public class DataManager {
         
         //save data
         this.persistence.save(this.data);
+        this.notifyObserver();
     }
 
     /**
@@ -66,19 +69,21 @@ public class DataManager {
      * @param taskId ID task yang akan ditandai sebagai selesai.
      * @throws IllegalArgumentException jika task dengan ID yang ditentukan tidak ditemukan.
      */
-    public void completeTask(int taskId) throws IOException {
+    public synchronized void completeTask(int taskId) throws IOException {
         Task taskToComplete = this.getTaskById(taskId);
         taskToComplete.completeTask();
         this.persistence.save(this.data);
+        this.notifyObserver();
     }
 
-    public void uncompleteTask(int taskId) throws IOException {
+    public synchronized void uncompleteTask(int taskId) throws IOException {
         Task taskToComplete = this.getTaskById(taskId);
         if (taskToComplete == null) {
             throw new IllegalArgumentException("Task not found.");
         }
         taskToComplete.uncompleteTask();
         this.persistence.save(this.data);
+        this.notifyObserver();
     }
 
     /**
@@ -86,12 +91,12 @@ public class DataManager {
      * 
      * @return Daftar task yang telah selesai.
      */
-    public List<Task> getAllTasks() {     
+    public synchronized List<Task> getAllTasks() {     
         List<Task> copyOfTasks = new ArrayList<>(this.data.getTasks());
         return copyOfTasks;
     }
 
-    public void editTask(int taskId, String newName, Date newDeadline) throws IOException {
+    public synchronized void editTask(int taskId, String newName, Date newDeadline) throws IOException {
         Task editedTask = getTaskById(taskId);
         if (editedTask == null) {
             throw new IllegalArgumentException("Task not found.");
@@ -99,15 +104,25 @@ public class DataManager {
         editedTask.setNamaTask(newName);
         editedTask.setDeadline(newDeadline);
         this.persistence.save(this.data);
+        this.notifyObserver();
     }
     
+    public synchronized void addListener(UiObserver listener) {
+        observers.add(listener);
+    }
+
+    public synchronized void notifyObserver() {
+        for (UiObserver observer : observers) {
+            observer.update(this.getAllTasks());
+        }
+    }
     
     private Task getTaskById(int taskId) {
         List<Task> tasks = this.data.getTasks();
         if (tasks == null) {
             throw new IllegalArgumentException("internal error");
         }
-        
+
         if (tasks.isEmpty()) {
             throw new IllegalArgumentException("Aktivitas Kosong");
         }

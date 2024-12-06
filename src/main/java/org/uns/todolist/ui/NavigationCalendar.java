@@ -2,10 +2,21 @@ package org.uns.todolist.ui;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.models.CalendarEvent;
+import org.uns.todolist.models.Task;
+import org.uns.todolist.service.UiObserver;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -30,7 +41,9 @@ import javafx.scene.layout.VBox;
  * berikut link refrensinya : https://github.com/JKostikiadis/JFXCalendar
  */
 
-public class NavigationCalendar extends VBox {
+public class NavigationCalendar extends VBox implements UiObserver {
+	private static final String AFTER_TODAY_COLOR = "#A5D8A5";
+	private static final String BEFORE_TODAY_COLOR = "#FF6F61";
 
 	private final int PREVIOUS = 0;
 	private final int CURRENT = 1;
@@ -47,8 +60,29 @@ public class NavigationCalendar extends VBox {
 	private IntegerProperty markedCell = new SimpleIntegerProperty();
 
 	public StringProperty selectedDateProperty = new SimpleStringProperty();
+	
+	Set<LocalDate> taskDates;
 
-	public NavigationCalendar() {
+	@Override
+	public void update(List<Task> tasks) {
+		updateDates(tasks);
+		this.refreshCalendar();
+	}
+
+
+	private void updateDates(List<Task> tasks) {
+		this.taskDates = tasks.stream()
+			.map(Task::getDeadline)              
+			.filter(Objects::nonNull)            
+			.map(deadline -> deadline.toInstant() 
+				.atZone(ZoneId.systemDefault())  
+				.toLocalDate())                  
+			.collect(Collectors.toUnmodifiableSet());  
+	}
+
+
+	public NavigationCalendar(List<Task> tasks) {
+		updateDates(tasks);
 		// Calendar pane
 		setId("navigation_calendar");
 		setPadding(new Insets(30, 20, 15, 20));
@@ -92,11 +126,13 @@ public class NavigationCalendar extends VBox {
 		// Button actions
 		prevMonthButton.setOnAction(e -> {
 			moveMonthBackwardOnNavCalendar();
+			refreshCalendar();
 			clearSelection();
 		});
 
 		nextMonthButton.setOnAction(e -> {
 			moveMonthForwardOnNavCalendar();
+			refreshCalendar();
 			clearSelection();
 		});
 
@@ -120,100 +156,118 @@ public class NavigationCalendar extends VBox {
 		}
 		
 		navigationCalendarGrid.setPadding(new Insets(10, 0, 0, 0));
-		refreshCalendar();
-		
+		this.refreshCalendar();
 	}
 
 	public void refreshCalendar() {
 		// Remove all the nodes inside the 'calendar'
 		navigationCalendarGrid.getChildren().clear();
-
+	
 		// Add headers (days) and their tooltips
 		String tooltipText[] = CalendarEvent.DAYS_FULL_NAMES;
-		
 		String dayText[] = CalendarEvent.DAYS_NAMES_LETTERS;
 		for (int col = 0; col < 7; col++) {
-            int row = 0;
+			int row = 0;
 			Button dayButton = new Button(dayText[col]);
 			dayButton.setTooltip(new Tooltip(tooltipText[col]));
 			dayButton.getStyleClass().add("flat_button");
 			navigationCalendarGrid.add(dayButton, col, row);
 			this.adjustButton(dayButton);
-        }
+		}
 	
-
 		// Find selected date informations and update properties
-		// used in date display
 		int selectedMonthIndex = selectedDate.getMonthValue();
-		int lenghtOfSelectedMonth = selectedDate.lengthOfMonth();
+		int lengthOfSelectedMonth = selectedDate.lengthOfMonth();
 		int selectedYear = selectedDate.getYear();
-
+	
 		currentMonthProperty.set(CalendarEvent.MONTHS[selectedMonthIndex - 1]);
 		currentYearProperty.set(selectedYear);
 		currentDayProperty.set(selectedDate.getDayOfMonth());
-
-		// in order to display the day correctly we need to find
-		// the start of our calendar which is not always starts on Monday
-		// so find the previous month
+	
+		// In order to display the day correctly we need to find
+		// the start of our calendar, which doesn't always start on Monday.
+		// So, find the previous month
 		LocalDate prevMonthDate = selectedDate.minusMonths(1);
-		int lenghtOfPrevMonth = prevMonthDate.lengthOfMonth();
-
-		// Find the when (day) was the first day of the month ( ex. Friday)
+		int lengthOfPrevMonth = prevMonthDate.lengthOfMonth();
+	
+		// Find the first day of the month
 		LocalDate firstOfMonthDate = LocalDate.of(selectedYear, selectedMonthIndex, 1);
 		int firstDayIndex = findDayIndex(firstOfMonthDate.getDayOfWeek()) - 1;
-
-		
+	
 		// Add the previous month's days
 		int row = 1;
 		int col = 0;
 		for (int i = 0; i <= firstDayIndex; i++) {
-			String dayIndexStr = String.valueOf(lenghtOfPrevMonth - firstDayIndex + i);
+			int dayIndex = lengthOfPrevMonth - firstDayIndex + i;
+			String dayIndexStr = String.valueOf(dayIndex);
 			Button dayButton = createCalendarCell(dayIndexStr, PREVIOUS);
 			dayButton.getStyleClass().add("calendar_cell_inactive");
+			LocalDate currDateIteration = LocalDate.of(prevMonthDate.getYear(), prevMonthDate.getMonthValue(), dayIndex);
+			if(taskDates.contains(currDateIteration)) {
+				String currentStyle = dayButton.getStyle();
+				dayButton.setStyle(currentStyle + "-fx-background-color:" + BEFORE_TODAY_COLOR + "; -fx-opacity: 0.7");
+			}
 			navigationCalendarGrid.add(dayButton, col++, row);
 			this.adjustButton(dayButton);
 		}
 	
-		// Fill the calendar with days of the current month
+		// Get today's date
 		LocalDate currentDate = LocalDate.now();
-		int currentMonth = currentDate.getMonthValue();
-		int currentDay = currentDate.getDayOfMonth();
 	
-		for (int i = 1; i <= lenghtOfSelectedMonth; i++) {
+		// Fill the calendar with days of the current month
+		for (int i = 1; i <= lengthOfSelectedMonth; i++) {
 			if (col == 7) { // Start a new row after 7 columns
 				col = 0;
 				row++;
 			}
+			LocalDate currDateIteration = LocalDate.of(selectedYear, selectedMonthIndex, i);
 			Button dayButton = createCalendarCell(String.valueOf(i), CURRENT);
 			dayButton.getStyleClass().add("calendar_cell_active");
+			if(taskDates.contains(currDateIteration)) {
+				String currentStyle = dayButton.getStyle();
+				if(currDateIteration.isBefore(currentDate)) {
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + BEFORE_TODAY_COLOR + "; -fx-opacity: 1");
+				} else if (currDateIteration.isAfter(currentDate)) {
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR);
+				}
+			}
+			
 			navigationCalendarGrid.add(dayButton, col++, row);
 			this.adjustButton(dayButton);
+	
 			if (i == markedCell.get()) {
 				// Highlight the selected day
-				dayButton.setStyle("-fx-background-color : #c0c0c0 ; -fx-text-fill : black");
+				dayButton.setStyle("-fx-background-color : #4285F4 ; -fx-text-fill : white");
 				selectedCalendarCell = dayButton;
 			}
 	
-			if (selectedMonthIndex == currentMonth && currentDay == i) {
+			if (currDateIteration.equals(currentDate)) {
 				dayButton.setId("currentDay");
 			}
 		}
 	
 		// Add next month's days until the grid is filled (7 rows, 7 columns)
-		int index = 1;
+		LocalDate nextMonth = selectedDate.plusMonths(1);
+		int currentDateIncrement = 1;
 		while (row < 6 || (row == 6 && col < 7)) {
 			if (col == 7) { // Start a new row after 7 columns
 				col = 0;
 				row++;
 			}
-			Button dayButton = createCalendarCell(String.valueOf(index++), NEXT);
+			Button dayButton = createCalendarCell(String.valueOf(currentDateIncrement), NEXT);
 			dayButton.getStyleClass().add("calendar_cell_inactive");
-			navigationCalendarGrid.add(dayButton, col++, row);
+			LocalDate currentDateIteration = LocalDate.of(nextMonth.getYear(),nextMonth.getMonthValue(), currentDateIncrement);
+			if (taskDates.contains(currentDateIteration)) {
+				String currentStyle = dayButton.getStyle();
+				dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR + ";-fx-opacity: 0.7");
+			}
+			navigationCalendarGrid.add(dayButton, col, row);
 			this.adjustButton(dayButton);
+			currentDateIncrement++;
+			col++;
 		}
-	   
 	}
-
+			
 	public void select(int day) {
 		markedCell.set(day);
 	}
@@ -233,17 +287,17 @@ public class NavigationCalendar extends VBox {
 				selectedCalendarCell = button;
 				markedCell.set(Integer.parseInt(text));
 				selectedDate = selectedDate.withDayOfMonth(markedCell.get());
-				navigateToCurrent(text);
 			} else if (monthIndex == PREVIOUS) {
 				markedCell.set(Integer.parseInt(text));
-				navigateToPrevious(text);
+				moveMonthBackwardOnNavCalendar();
 				selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			} else {
 				markedCell.set(Integer.parseInt(text));
-				navigateToNext(text);
+				moveMonthForwardOnNavCalendar();
 				selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			}
 
+			refreshCalendar();
 			selectedDateProperty.set(getSelectedDate());
 			// Notify for the change ( We are using a InvalidationListener )
 			// TODO : Change to StringBinding or something in order to use
@@ -263,12 +317,10 @@ public class NavigationCalendar extends VBox {
 
 	private void moveMonthBackwardOnNavCalendar() {
 		selectedDate = selectedDate.minusMonths(1);
-		refreshCalendar();
 	}
 
 	private void moveMonthForwardOnNavCalendar() {
 		selectedDate = selectedDate.plusMonths(1);
-		refreshCalendar();
 	}
 
 	private int findDayIndex(DayOfWeek dayOfWeek) {
@@ -291,17 +343,6 @@ public class NavigationCalendar extends VBox {
 		return 0;
 	}
 
-	private void navigateToNext(String text) {
-		moveMonthForwardOnNavCalendar();
-	}
-
-	private void navigateToPrevious(String text) {
-		moveMonthBackwardOnNavCalendar();
-	}
-
-	private void navigateToCurrent(String text) {
-
-	}
 
 	public StringProperty getSelectedDateProperty() {
 		return selectedDateProperty;
@@ -323,4 +364,5 @@ public class NavigationCalendar extends VBox {
 		GridPane.setHalignment(dayButton, HPos.CENTER); 
 		GridPane.setValignment(dayButton, VPos.CENTER);
 	}
+	
 }

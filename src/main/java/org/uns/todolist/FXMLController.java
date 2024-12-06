@@ -88,7 +88,8 @@ public class FXMLController {
 
     public FXMLController(DataManager dataManager) {
         this.dataManager = dataManager;
-        this.navCalendar = new NavigationCalendar();
+        this.navCalendar = new NavigationCalendar(dataManager.getAllTasks());
+        dataManager.addListener(navCalendar);
         VBox.setVgrow(navCalendar, Priority.ALWAYS);
 		HBox.setHgrow(navCalendar, Priority.ALWAYS);
     }
@@ -108,8 +109,8 @@ public class FXMLController {
         flagListener();
         refreshTaskContainer();
         updateDate();
-        updateGreeting(); 
-        navCalendar.refreshCalendar();
+        updateGreeting();
+        navCalendar.refreshCalendar(); 
     }
 
 
@@ -342,7 +343,6 @@ public class FXMLController {
             });
         });
         
-
         edittedTaskBox.addListener((observable, oldFlag, newFlag) -> {
             if (newFlag != null) {
                 if (oldFlag != null) {
@@ -489,7 +489,6 @@ public class FXMLController {
 
         return editContainer;
     }
-
     
 }
 
