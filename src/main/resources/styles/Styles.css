@@ -595,7 +595,7 @@
     -fx-padding: 0 0 5 0;
 }
 
-.sort-button {
+.sort-button, .filter-button {
     -fx-background-color: #ffffff;
     -fx-font-weight: bold;
     -fx-border-color: #c9c9c9;
@@ -606,7 +606,7 @@
     -fx-text-fill: #333333;
 
     -fx-min-width: 100px; /* Minimum width */
-    -fx-pref-width: 100px; /* Preferred width */
+    -fx-pref-width: 120px; /* Preferred width */
     -fx-max-width: 200px; /* Maximum width */
     -fx-min-height: 50px; /* Minimum height */
     -fx-pref-height: 60px; /* Preferred height */
@@ -614,24 +614,6 @@
 
 }
 
-.filter-button {
-    -fx-background-color: #ffffff;
-    -fx-font-weight: bold;
-    -fx-border-color: #c9c9c9;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-padding: 8 12;
-    -fx-font-size: 14px;
-    -fx-text-fill: #333333;
-
-    -fx-min-width: 100px; /* Minimum width */
-    -fx-pref-width: 100px; /* Preferred width */
-    -fx-max-width: 200px; /* Maximum width */
-    -fx-min-height: 50px; /* Minimum height */
-    -fx-pref-height: 40px; /* Preferred height */
-    -fx-max-height: 200px; /* Maximum height */
-
-}
 
 .show-all-button {
     -fx-background-color: #ffffff;

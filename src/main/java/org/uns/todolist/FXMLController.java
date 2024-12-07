@@ -50,33 +50,25 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 public class FXMLController {
-    @FXML
-    private TextField taskNameField;
-
-    @FXML
-    private VBox calendarContainer;
-
-    @FXML
-    private VBox taskContainer;
     
     @FXML
+    private TextField taskNameField;
+    @FXML
+    private VBox calendarContainer;
+    @FXML
+    private VBox taskContainer;
+    @FXML
     private HBox addContainer;
-
     @FXML
     private ScrollPane taskScrollPane;
-
     @FXML
     private Button cancelTaskButton; 
-
     @FXML
     private VBox addTaskForm;
-
     @FXML
     private Label Month;
-
     @FXML
     private Label date;
-
     @FXML
     private Label greeting;
 
@@ -89,12 +81,14 @@ public class FXMLController {
     private static final double SCROLL_SPEED = 500;
     private Function<List<Task>, List<Task>> sortMethod = SortingMethod::defaultMethod;
     private Function<List<Task>, List<Task>> filterMethod = FilterMethod::defaultMethod;
+    private final ObjectProperty<LocalDate> filterByDate = new SimpleObjectProperty<>(null);
     private final ObjectProperty<SortIdentifier> sortName = new SimpleObjectProperty<>(SortIdentifier.DEFAULT);
-    private final ObjectProperty<FilterIdentifier> filterName = new SimpleObjectProperty<>(FilterIdentifier.DEFAULT);
+    private final ObjectProperty<FilterIdentifier> filterName = new SimpleObjectProperty<>(FilterIdentifier.SHOW_ALL);
 
+    
     public FXMLController(DataManager dataManager) {
         this.dataManager = dataManager;
-        this.navCalendar = new NavigationCalendar(dataManager.getAllTasks());
+        this.navCalendar = new NavigationCalendar(dataManager.getAllTasks(), this);
         dataManager.addListener(navCalendar);
         VBox.setVgrow(navCalendar, Priority.ALWAYS);
 		HBox.setHgrow(navCalendar, Priority.ALWAYS);
@@ -106,9 +100,9 @@ public class FXMLController {
         //one time
         calendarContainer.getChildren().add(0,navCalendar);
         cancelTaskButton.setGraphic(new FontIcon("fas-plus"));
+        showAllButton.getStyleClass().add("selected");
+        defaultButton.getStyleClass().add("selected");
         
-        
-
         //dynamic
         taskNameField.setFocusTraversable(false);
         taskContainerListener();
@@ -201,9 +195,12 @@ public class FXMLController {
     private void refreshTaskContainer() {
         taskContainer.getChildren().clear();
         List<Task> tasks = dataManager.getAllTasks();
-        List<Task> sortedTasks = sortMethod.apply(tasks);
-        List<Task> filteredTask = filterMethod.apply(sortedTasks);
-        for (Task task : filteredTask) {
+        tasks = sortMethod.apply(tasks);
+        if (filterByDate.get() != null) {
+            tasks = FilterMethod.bySelectedCalendarDate(tasks, filterByDate.get());
+        }
+        tasks = filterMethod.apply(tasks);
+        for (Task task : tasks) {
             HBox taskBox;
             if(edittedTaskBox.get() != null && (int) edittedTaskBox.get().getUserData() == task.getTaskId()) {
                 taskBox = edittedTaskBox.get();
@@ -519,14 +516,6 @@ public class FXMLController {
     private Button completedButton;
     @FXML
     private Button incompleteButton;
-    @FXML
-    private Button todayButton;
-    @FXML
-    private Button pastButton;
-    @FXML
-    private Button noDeadlineButton;
-    @FXML
-    private Button futureButton;
 
 
     private void buttonNavigationListener() {  
@@ -535,14 +524,9 @@ public class FXMLController {
         oldestButton.setOnAction(e -> sortName.set(SortIdentifier.OLDEST));
         nameButton.setOnAction(e -> sortName.set(SortIdentifier.NAME));
         
-        showAllButton.setOnAction(e -> filterName.set(FilterIdentifier.DEFAULT));
+        showAllButton.setOnAction(e -> filterName.set(FilterIdentifier.SHOW_ALL));
         completedButton.setOnAction(e -> filterName.set(FilterIdentifier.COMPLETED));
         incompleteButton.setOnAction(e -> filterName.set(FilterIdentifier.INCOMPLETE));
-        todayButton.setOnAction(e -> filterName.set(FilterIdentifier.TODAY));
-        pastButton.setOnAction(e -> filterName.set(FilterIdentifier.PAST));
-        noDeadlineButton.setOnAction(e -> filterName.set(FilterIdentifier.NO_DEADLINE));
-        futureButton.setOnAction(e -> filterName.set(FilterIdentifier.FUTURE));
-        
     }
 
     private void setSortMethod(Function<List<Task>, List<Task>> method) {
@@ -556,8 +540,6 @@ public class FXMLController {
     }
 
     public void NavigationControlListener() {
-        showAllButton.getStyleClass().add("selected");
-        defaultButton.getStyleClass().add("selected");
         sortName.addListener((observable, oldValue, newValue) -> {
             clearSortButtonSelection();
             
@@ -577,7 +559,7 @@ public class FXMLController {
         });
     
         filterName.addListener((observable, oldValue, newValue) -> {
-            clearFilterButtonSelection(); 
+            clearFilterButtonSelection();
             switch (newValue) {
                 case COMPLETED:
                     completedButton.getStyleClass().add("selected");
@@ -586,29 +568,32 @@ public class FXMLController {
                 case INCOMPLETE:
                     incompleteButton.getStyleClass().add("selected");
                     setFilterMethod(FilterMethod::ByIncomplete);
-                    break;
-                case TODAY:
-                    todayButton.getStyleClass().add("selected");
-                    setFilterMethod(FilterMethod::ByToday);
-                    break;
-                case PAST:
-                    pastButton.getStyleClass().add("selected");
-                    setFilterMethod(FilterMethod::ByPast);
-                    break;
-                case NO_DEADLINE:
-                    noDeadlineButton.getStyleClass().add("selected");
-                    setFilterMethod(FilterMethod::ByNoDeadline);
-                    break;
-                case FUTURE:
-                    futureButton.getStyleClass().add("selected");
-                    setFilterMethod(FilterMethod::ByFuture);
-                    break;
-                default:
+                    break;     
+                case SHOW_ALL:
+                    setFilterMethod(FilterMethod::defaultMethod);
+                    if (oldValue != FilterIdentifier.RESET) {
+                        filterByDate.set(null);
+                        navCalendar.resetMarkedCell();
+                        clearFilterButtonSelection();
+                    } 
                     showAllButton.getStyleClass().add("selected");
-                    setFilterMethod(sortMethod);
-                    sortName.set(SortIdentifier.DEFAULT);
+                    refreshTaskContainer(); 
+                    break;
+                case DATE:
+                    if (oldValue != FilterIdentifier.SHOW_ALL) {
+                        filterName.set(oldValue);
+                    } 
                     break;
             }
+        });
+
+        filterByDate.addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) { 
+                filterName.set(FilterIdentifier.RESET);
+                filterName.set(FilterIdentifier.SHOW_ALL);
+                filterName.set(FilterIdentifier.DATE);
+            } 
+
         });
     }
     
@@ -623,12 +608,13 @@ public class FXMLController {
         showAllButton.getStyleClass().remove("selected");
         completedButton.getStyleClass().remove("selected");
         incompleteButton.getStyleClass().remove("selected");
-        todayButton.getStyleClass().remove("selected");
-        pastButton.getStyleClass().remove("selected");
-        noDeadlineButton.getStyleClass().remove("selected");
-        futureButton.getStyleClass().remove("selected");
     }
    
-    
+    public void reportDateCalendarChange(LocalDate date) {
+        filterByDate.set(date);
+    }
+
+
+ 
 }
 

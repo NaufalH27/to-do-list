@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.uns.todolist.FXMLController;
 import org.uns.todolist.models.CalendarEvent;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.UiObserver;
@@ -58,10 +59,13 @@ public class NavigationCalendar extends VBox implements UiObserver {
 	private StringProperty currentMonthProperty = new SimpleStringProperty();
 	private IntegerProperty currentDayProperty = new SimpleIntegerProperty();
 	private LocalDate selectedDate;
+	private LocalDate markedDate;
 
 	private IntegerProperty markedCell = new SimpleIntegerProperty();
 
 	public StringProperty selectedDateProperty = new SimpleStringProperty();
+
+	public final FXMLController controller;
 	
 	Set<LocalDate> taskDates;
 
@@ -85,7 +89,8 @@ public class NavigationCalendar extends VBox implements UiObserver {
 	
 
 
-	public NavigationCalendar(List<Task> tasks) {
+	public NavigationCalendar(List<Task> tasks, FXMLController controller) {
+		this.controller = controller;
 		updateDates(tasks);
 		// Calendar pane
 		setId("navigation_calendar");
@@ -284,7 +289,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			navigationCalendarGrid.add(dayButton, col++, row);
 			this.adjustButton(dayButton);
 	
-			if (i == markedCell.get()) {
+			if (i == markedCell.get() && markedDate != null) {
 				// Highlight the selected day
 				dayButton.setStyle("-fx-background-color : #c0c0c0 ; -fx-text-fill : black;");
 				selectedCalendarCell = dayButton;
@@ -319,6 +324,7 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			currentDateIncrement++;
 			col++;
 		}
+		controller.reportDateCalendarChange(markedDate);
 	}
 			
 	public void select(int day) {
@@ -343,18 +349,17 @@ public class NavigationCalendar extends VBox implements UiObserver {
 				button.setStyle("-fx-background-color : #c0c0c0; -fx-text-fill : black");
 				selectedCalendarCell = button;
 				markedCell.set(Integer.parseInt(text));
-				selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			} else if (monthIndex == PREVIOUS) {
 				markedCell.set(Integer.parseInt(text));
 				moveMonthBackwardOnNavCalendar();
-				selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			} else {
 				markedCell.set(Integer.parseInt(text));
 				moveMonthForwardOnNavCalendar();
-				selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			}
-
+			selectedDate = selectedDate.withDayOfMonth(markedCell.get());
+			markedDate = selectedDate.withDayOfMonth(markedCell.get());
 			refreshCalendar();
+
 			selectedDateProperty.set(getSelectedDate());
 			// Notify for the change ( We are using a InvalidationListener )
 			// TODO : Change to StringBinding or something in order to use
@@ -412,8 +417,13 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		return date;
 	}
 
-	public LocalDate getLocalDate() {
-		return selectedDate;
+	public LocalDate getMarkedDate() {
+		return markedDate;
+	}
+
+	public void resetMarkedCell() {
+		markedDate = null;
+		refreshCalendar();
 	}
 
 

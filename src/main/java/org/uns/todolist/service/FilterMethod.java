@@ -1,4 +1,6 @@
 package org.uns.todolist.service;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -57,5 +59,19 @@ public class FilterMethod {
                     return deadline != null && deadline.after(today); 
                 })
                 .collect(Collectors.toList());
+    }
+
+    public static List<Task> bySelectedCalendarDate(List<Task> tasks, LocalDate selectedDate) {
+        return tasks.stream()
+                .filter(task -> {
+                    if (task.getDeadline() != null) {
+                        LocalDate taskDeadline = task.getDeadline().toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate();
+                        return taskDeadline.equals(selectedDate);
+                    }
+                    return false; 
+                })
+                .collect(Collectors.toList());  
     }
 }

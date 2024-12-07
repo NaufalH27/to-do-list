@@ -1,11 +1,9 @@
 package org.uns.todolist.ui;
 
 public enum FilterIdentifier {
-        DEFAULT,
+        SHOW_ALL,
         COMPLETED,
         INCOMPLETE,
-        TODAY,
-        PAST,
-        NO_DEADLINE,
-        FUTURE
+        DATE,
+        RESET
 }

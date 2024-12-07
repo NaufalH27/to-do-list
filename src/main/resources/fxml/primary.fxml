@@ -84,10 +84,6 @@
                     <FlowPane hgap="8" vgap="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
                         <Button fx:id="completedButton" text="Completed" styleClass="filter-button"/>
                         <Button fx:id="incompleteButton" text="Incomplete" styleClass="filter-button"/>
-                        <Button fx:id="todayButton" text="Today" styleClass="filter-button"/>
-                        <Button fx:id="pastButton" text="Past" styleClass="filter-button"/>
-                        <Button fx:id="noDeadlineButton" text="No Deadline" styleClass="filter-button"/>
-                        <Button fx:id="futureButton" text="Future" styleClass="filter-button"/>
                     </FlowPane>
 
                 </VBox>
