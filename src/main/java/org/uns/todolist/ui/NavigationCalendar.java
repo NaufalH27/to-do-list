@@ -3,7 +3,6 @@ package org.uns.todolist.ui;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Comparator;
@@ -152,7 +151,6 @@ public class NavigationCalendar extends VBox implements UiObserver {
 
 		prevMonthButton.setGraphic(previousMonthIcon);
 		nextMonthButton.setGraphic(nextMonthIcon);
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy");
 		LocalDate currentDay = LocalDate.now();
 
 		LocalDate currentMonthFirstDay = selectedDate.with(TemporalAdjusters.firstDayOfMonth());

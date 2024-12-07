@@ -65,4 +65,9 @@ public class SortingMethod {
                 .toList();
     }
 
+    public static List<Task> byName(List<Task> tasks) {
+        return tasks.stream()
+                    .sorted(Comparator.comparing(Task::getNamaTask, String.CASE_INSENSITIVE_ORDER))
+                    .toList();
+    }
 }

@@ -16,6 +16,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.helper.DayHelper;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
+import org.uns.todolist.service.FilterMethod;
 import org.uns.todolist.service.SortingMethod;
 import org.uns.todolist.ui.DateInputField;
 import org.uns.todolist.ui.NavigationCalendar;
@@ -84,8 +85,10 @@ public class FXMLController {
     private double savedVValue = 0;
     private final DataManager dataManager;
     private static final double SCROLL_SPEED = 500;
-    private Function<List<Task>, List<Task>> sortMethod;
-    private Function<List<Task>, List<Task>> filterMethod;
+    private final ObjectProperty<Function<List<Task>, List<Task>>> sortMethod = new 
+                                                                        SimpleObjectProperty<>(SortingMethod::defaultMethod);
+    private final ObjectProperty<Function<List<Task>, List<Task>>> filterMethod = new 
+                                                                        SimpleObjectProperty<>(FilterMethod::defaultMethod);
 
     public FXMLController(DataManager dataManager) {
         this.dataManager = dataManager;
@@ -111,6 +114,7 @@ public class FXMLController {
         refreshTaskContainer();
         updateDate();
         updateGreeting();
+        buttonNavigationListener();
         navCalendar.refreshCalendar(); 
     }
 
@@ -191,8 +195,9 @@ public class FXMLController {
     private void refreshTaskContainer() {
         taskContainer.getChildren().clear();
         List<Task> tasks = dataManager.getAllTasks();
-        List<Task> sortedTasks = SortingMethod.defaultMethod(tasks);
-        for (Task task : sortedTasks) {
+        List<Task> sortedTasks = sortMethod.get().apply(tasks);
+        List<Task> filteredTask = filterMethod.get().apply(sortedTasks);
+        for (Task task : filteredTask) {
             HBox taskBox;
             if(edittedTaskBox.get() != null && (int) edittedTaskBox.get().getUserData() == task.getTaskId()) {
                 taskBox = edittedTaskBox.get();
@@ -211,6 +216,7 @@ public class FXMLController {
         }
         taskScrollPane.setVvalue(savedVValue);
     }
+
 
     private void toggleTaskCompletion(Task task) {
         try {
@@ -491,6 +497,53 @@ public class FXMLController {
 
         return editContainer;
     }
+
+
+    @FXML
+    private Button defaultButton;
+    @FXML
+    private Button recentButton;
+    @FXML
+    private Button oldestButton;
+    @FXML
+    private Button nameButton;
+    @FXML
+    private Button completedButton;
+    @FXML
+    private Button incompleteButton;
+    @FXML
+    private Button todayButton;
+    @FXML
+    private Button pastButton;
+    @FXML
+    private Button noDeadlineButton;
+    @FXML
+    private Button futureButton;
+
+    private void buttonNavigationListener() {
+        defaultButton.setOnAction(e -> setSortMethod(SortingMethod::defaultMethod));
+        recentButton.setOnAction(e -> setSortMethod(SortingMethod::byRecentlyCreated));
+        oldestButton.setOnAction(e -> setSortMethod(SortingMethod::byOldestCreated));
+        nameButton.setOnAction(e -> setSortMethod(SortingMethod::byName));
+    
+        completedButton.setOnAction(e -> setFilterMethod(FilterMethod::ByCompleted));
+        incompleteButton.setOnAction(e -> setFilterMethod(FilterMethod::ByIncomplete));
+        todayButton.setOnAction(e -> setFilterMethod(FilterMethod::ByToday));
+        pastButton.setOnAction(e -> setFilterMethod(FilterMethod::ByPast));
+        noDeadlineButton.setOnAction(e -> setFilterMethod(FilterMethod::ByNoDeadline));
+        futureButton.setOnAction(e -> setFilterMethod(FilterMethod::ByFuture));
+    }
+
+    private void setSortMethod(Function<List<Task>, List<Task>> method) {
+        this.sortMethod.set(method);
+        refreshTaskContainer();
+    }
+
+    private void setFilterMethod(Function<List<Task>, List<Task>> method) {
+        this.filterMethod.set(method);
+        refreshTaskContainer();
+    }
+
     
 }
 

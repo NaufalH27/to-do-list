@@ -74,24 +74,22 @@
                     <!-- Sort Section -->
                     <Label text="SORT" styleClass="section-title"/>
                     <HBox spacing="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
-                        <Button text="Default" styleClass="sort-button"/>
-                        <Button text="Recent" styleClass="sort-button"/>
-                        <Button text="Oldest" styleClass="sort-button"/>
-                        <Button text="Name" styleClass="sort-button"/>
+                        <Button fx:id="defaultButton" text="Default" styleClass="sort-button"/>
+                        <Button fx:id="recentButton" text="Recent" styleClass="sort-button"/>
+                        <Button fx:id="oldestButton" text="Oldest" styleClass="sort-button"/>
+                        <Button fx:id="nameButton" text="Name" styleClass="sort-button"/>
                     </HBox>
-
-                    <Region VBox.vgrow="NEVER" prefHeight="40"/> 
-                    <!-- Filter Section -->
+                    <Region VBox.vgrow="NEVER" prefHeight="40"/>
                     <Label text="FILTER" styleClass="section-title"/>
-                    <!-- Use FlowPane instead of HBox for wrapping -->
                     <FlowPane hgap="8" vgap="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
-                        <Button text="Completed" styleClass="filter-button"/>
-                        <Button text="Incomplete" styleClass="filter-button"/>
-                        <Button text="Today" styleClass="filter-button"/>
-                        <Button text="Past" styleClass="filter-button"/>
-                        <Button text="No Deadline" styleClass="filter-button"/>
-                        <Button text="Future" styleClass="filter-button"/>
+                        <Button fx:id="completedButton" text="Completed" styleClass="filter-button"/>
+                        <Button fx:id="incompleteButton" text="Incomplete" styleClass="filter-button"/>
+                        <Button fx:id="todayButton" text="Today" styleClass="filter-button"/>
+                        <Button fx:id="pastButton" text="Past" styleClass="filter-button"/>
+                        <Button fx:id="noDeadlineButton" text="No Deadline" styleClass="filter-button"/>
+                        <Button fx:id="futureButton" text="Future" styleClass="filter-button"/>
                     </FlowPane>
+
                 </VBox>
             </VBox>
 
