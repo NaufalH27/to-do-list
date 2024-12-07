@@ -1,7 +1,6 @@
 module org.uns.todolist {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.media;
     requires com.google.gson;
     requires javafx.base;
     requires org.kordamp.ikonli.javafx; 
