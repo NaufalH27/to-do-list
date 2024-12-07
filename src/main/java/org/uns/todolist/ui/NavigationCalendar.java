@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -152,9 +153,9 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		prevMonthButton.setGraphic(previousMonthIcon);
 		nextMonthButton.setGraphic(nextMonthIcon);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy");
+		LocalDate currentDay = LocalDate.now();
 
-		LocalDate currentMonthFirstDay = LocalDate.of(selectedDate.getYear(), selectedDate.getDayOfMonth(), 1);
-		System.out.println(currentMonthFirstDay.format(formatter));
+		LocalDate currentMonthFirstDay = selectedDate.with(TemporalAdjusters.firstDayOfMonth());
 		Optional<LocalDate> nearestBeforeCurrentMonth = taskDates.stream()
                 .filter(date -> date.isBefore(currentMonthFirstDay)) 
                  .min(Comparator.comparingLong(date -> 
@@ -162,24 +163,22 @@ public class NavigationCalendar extends VBox implements UiObserver {
 					));
 		
 		nearestBeforeCurrentMonth.ifPresent(date -> {
-			if (date.isBefore(selectedDate)) {
-				previousMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
-			} else {
+			if (date.isBefore(currentDay)) {
 				previousMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
+			} else {
+				previousMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
 			}
 		});
 
-		LocalDate currentMonthLastDay = LocalDate.of(selectedDate.getYear(), selectedDate.getDayOfMonth(), selectedDate.getDayOfMonth());
+		LocalDate currentMonthLastDay = selectedDate.with(TemporalAdjusters.lastDayOfMonth());
 		Optional<LocalDate> nearestAfterCurrentMonth = taskDates.stream()
                 .filter(date -> date.isAfter(currentMonthLastDay)) 
-                .min((d1, d2) -> {
-                    long diff1 = Math.abs(d1.until(selectedDate).getDays());
-                    long diff2 = Math.abs(d2.until(selectedDate).getDays());
-                    return Long.compare(diff1, diff2);
-                });
+                 .min(Comparator.comparingLong(date -> 
+						Math.abs(ChronoUnit.DAYS.between(date, currentMonthLastDay)) 
+					));
 
 		nearestAfterCurrentMonth.ifPresent(date -> {
-			if (date.isBefore(selectedDate)) {
+			if (date.isBefore(currentDay)) {
 				nextMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
 			} else {
 				nextMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
@@ -241,6 +240,8 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		LocalDate firstOfMonthDate = LocalDate.of(selectedYear, selectedMonthIndex, 1);
 		int firstDayIndex = findDayIndex(firstOfMonthDate.getDayOfWeek()) - 1;
 	
+		// Get today's date
+		LocalDate currentDate = LocalDate.now();
 		// Add the previous month's days
 		int row = 1;
 		int col = 0;
@@ -252,15 +253,17 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			LocalDate currDateIteration = LocalDate.of(prevMonthDate.getYear(), prevMonthDate.getMonthValue(), dayIndex);
 			if(taskDates.contains(currDateIteration)) {
 				String currentStyle = dayButton.getStyle();
-				dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(PAST_TODAY_COLOR, 0.7) );
+				if(currDateIteration.isBefore(currentDate)) {
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + PAST_TODAY_COLOR + "; -fx-opacity: 0.7");
+				} else if (currDateIteration.isAfter(currentDate)) {
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR);
+				}
 			}
 			
 			navigationCalendarGrid.add(dayButton, col++, row);
 			this.adjustButton(dayButton);
 		}
-	
-		// Get today's date
-		LocalDate currentDate = LocalDate.now();
+
 	
 		// Fill the calendar with days of the current month
 		for (int i = 1; i <= lengthOfSelectedMonth; i++) {
@@ -307,7 +310,11 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			LocalDate currentDateIteration = LocalDate.of(nextMonth.getYear(),nextMonth.getMonthValue(), currentDateIncrement);
 			if (taskDates.contains(currentDateIteration)) {
 				String currentStyle = dayButton.getStyle();
-				dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(AFTER_TODAY_COLOR, 0.7));
+				if(currentDateIteration.isBefore(currentDate)) {
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + PAST_TODAY_COLOR + "; -fx-opacity: 0.7");
+				} else if (currentDateIteration.isAfter(currentDate)) {
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR);
+				}
 			}
 			navigationCalendarGrid.add(dayButton, col, row);
 			this.adjustButton(dayButton);
