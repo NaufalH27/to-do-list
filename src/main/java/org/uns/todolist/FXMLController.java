@@ -19,7 +19,9 @@ import org.uns.todolist.service.DataManager;
 import org.uns.todolist.service.FilterMethod;
 import org.uns.todolist.service.SortingMethod;
 import org.uns.todolist.ui.DateInputField;
+import org.uns.todolist.ui.FilterIdentifier;
 import org.uns.todolist.ui.NavigationCalendar;
+import org.uns.todolist.ui.SortIdentifier;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -85,10 +87,10 @@ public class FXMLController {
     private double savedVValue = 0;
     private final DataManager dataManager;
     private static final double SCROLL_SPEED = 500;
-    private final ObjectProperty<Function<List<Task>, List<Task>>> sortMethod = new 
-                                                                        SimpleObjectProperty<>(SortingMethod::defaultMethod);
-    private final ObjectProperty<Function<List<Task>, List<Task>>> filterMethod = new 
-                                                                        SimpleObjectProperty<>(FilterMethod::defaultMethod);
+    private Function<List<Task>, List<Task>> sortMethod = SortingMethod::defaultMethod;
+    private Function<List<Task>, List<Task>> filterMethod = FilterMethod::defaultMethod;
+    private final ObjectProperty<SortIdentifier> sortName = new SimpleObjectProperty<>(SortIdentifier.DEFAULT);
+    private final ObjectProperty<FilterIdentifier> filterName = new SimpleObjectProperty<>(FilterIdentifier.DEFAULT);
 
     public FXMLController(DataManager dataManager) {
         this.dataManager = dataManager;
@@ -102,8 +104,10 @@ public class FXMLController {
     @FXML
     public void initialize() {
         //one time
-        calendarContainer.getChildren().add(navCalendar);
+        calendarContainer.getChildren().add(0,navCalendar);
         cancelTaskButton.setGraphic(new FontIcon("fas-plus"));
+        
+        
 
         //dynamic
         taskNameField.setFocusTraversable(false);
@@ -114,11 +118,13 @@ public class FXMLController {
         refreshTaskContainer();
         updateDate();
         updateGreeting();
+        NavigationControlListener();
         buttonNavigationListener();
         navCalendar.refreshCalendar(); 
     }
 
 
+   
 
     @FXML
     private void addTaskFieldListener() {
@@ -195,8 +201,8 @@ public class FXMLController {
     private void refreshTaskContainer() {
         taskContainer.getChildren().clear();
         List<Task> tasks = dataManager.getAllTasks();
-        List<Task> sortedTasks = sortMethod.get().apply(tasks);
-        List<Task> filteredTask = filterMethod.get().apply(sortedTasks);
+        List<Task> sortedTasks = sortMethod.apply(tasks);
+        List<Task> filteredTask = filterMethod.apply(sortedTasks);
         for (Task task : filteredTask) {
             HBox taskBox;
             if(edittedTaskBox.get() != null && (int) edittedTaskBox.get().getUserData() == task.getTaskId()) {
@@ -500,6 +506,8 @@ public class FXMLController {
 
 
     @FXML
+    private Button showAllButton;
+    @FXML
     private Button defaultButton;
     @FXML
     private Button recentButton;
@@ -520,30 +528,107 @@ public class FXMLController {
     @FXML
     private Button futureButton;
 
-    private void buttonNavigationListener() {
-        defaultButton.setOnAction(e -> setSortMethod(SortingMethod::defaultMethod));
-        recentButton.setOnAction(e -> setSortMethod(SortingMethod::byRecentlyCreated));
-        oldestButton.setOnAction(e -> setSortMethod(SortingMethod::byOldestCreated));
-        nameButton.setOnAction(e -> setSortMethod(SortingMethod::byName));
-    
-        completedButton.setOnAction(e -> setFilterMethod(FilterMethod::ByCompleted));
-        incompleteButton.setOnAction(e -> setFilterMethod(FilterMethod::ByIncomplete));
-        todayButton.setOnAction(e -> setFilterMethod(FilterMethod::ByToday));
-        pastButton.setOnAction(e -> setFilterMethod(FilterMethod::ByPast));
-        noDeadlineButton.setOnAction(e -> setFilterMethod(FilterMethod::ByNoDeadline));
-        futureButton.setOnAction(e -> setFilterMethod(FilterMethod::ByFuture));
+
+    private void buttonNavigationListener() {  
+        defaultButton.setOnAction(e -> sortName.set(SortIdentifier.DEFAULT));
+        recentButton.setOnAction(e -> sortName.set(SortIdentifier.NEWEST));
+        oldestButton.setOnAction(e -> sortName.set(SortIdentifier.OLDEST));
+        nameButton.setOnAction(e -> sortName.set(SortIdentifier.NAME));
+        
+        showAllButton.setOnAction(e -> filterName.set(FilterIdentifier.DEFAULT));
+        completedButton.setOnAction(e -> filterName.set(FilterIdentifier.COMPLETED));
+        incompleteButton.setOnAction(e -> filterName.set(FilterIdentifier.INCOMPLETE));
+        todayButton.setOnAction(e -> filterName.set(FilterIdentifier.TODAY));
+        pastButton.setOnAction(e -> filterName.set(FilterIdentifier.PAST));
+        noDeadlineButton.setOnAction(e -> filterName.set(FilterIdentifier.NO_DEADLINE));
+        futureButton.setOnAction(e -> filterName.set(FilterIdentifier.FUTURE));
+        
     }
 
     private void setSortMethod(Function<List<Task>, List<Task>> method) {
-        this.sortMethod.set(method);
+        this.sortMethod = method;
         refreshTaskContainer();
     }
 
     private void setFilterMethod(Function<List<Task>, List<Task>> method) {
-        this.filterMethod.set(method);
+        this.filterMethod = method;
         refreshTaskContainer();
     }
 
+    public void NavigationControlListener() {
+        showAllButton.getStyleClass().add("selected");
+        defaultButton.getStyleClass().add("selected");
+        sortName.addListener((observable, oldValue, newValue) -> {
+            clearSortButtonSelection();
+            
+            if (newValue == SortIdentifier.NEWEST) {
+                recentButton.getStyleClass().add("selected");
+                setSortMethod(SortingMethod::byRecentlyCreated);
+            } else if (newValue == SortIdentifier.OLDEST) {
+                oldestButton.getStyleClass().add("selected");
+                setSortMethod(SortingMethod::byOldestCreated);
+            } else if (newValue == SortIdentifier.NAME) {
+                nameButton.getStyleClass().add("selected");
+                setSortMethod(SortingMethod::byName);
+            } else {
+                defaultButton.getStyleClass().add("selected");
+                setSortMethod(SortingMethod::defaultMethod);
+            }
+        });
+    
+        filterName.addListener((observable, oldValue, newValue) -> {
+            clearFilterButtonSelection(); 
+            switch (newValue) {
+                case COMPLETED:
+                    completedButton.getStyleClass().add("selected");
+                    setFilterMethod(FilterMethod::ByCompleted);
+                    break;
+                case INCOMPLETE:
+                    incompleteButton.getStyleClass().add("selected");
+                    setFilterMethod(FilterMethod::ByIncomplete);
+                    break;
+                case TODAY:
+                    todayButton.getStyleClass().add("selected");
+                    setFilterMethod(FilterMethod::ByToday);
+                    break;
+                case PAST:
+                    pastButton.getStyleClass().add("selected");
+                    setFilterMethod(FilterMethod::ByPast);
+                    break;
+                case NO_DEADLINE:
+                    noDeadlineButton.getStyleClass().add("selected");
+                    setFilterMethod(FilterMethod::ByNoDeadline);
+                    break;
+                case FUTURE:
+                    futureButton.getStyleClass().add("selected");
+                    setFilterMethod(FilterMethod::ByFuture);
+                    break;
+                default:
+                    showAllButton.getStyleClass().add("selected");
+                    setFilterMethod(sortMethod);
+                    sortName.set(SortIdentifier.DEFAULT);
+                    break;
+            }
+        });
+    }
+    
+    private void clearSortButtonSelection() {
+        defaultButton.getStyleClass().remove("selected");
+        recentButton.getStyleClass().remove("selected");
+        oldestButton.getStyleClass().remove("selected");
+        nameButton.getStyleClass().remove("selected");
+    }
+
+    private void clearFilterButtonSelection() {
+        showAllButton.getStyleClass().remove("selected");
+        completedButton.getStyleClass().remove("selected");
+        incompleteButton.getStyleClass().remove("selected");
+        todayButton.getStyleClass().remove("selected");
+        pastButton.getStyleClass().remove("selected");
+        noDeadlineButton.getStyleClass().remove("selected");
+        futureButton.getStyleClass().remove("selected");
+    }
+   
     
 }
 

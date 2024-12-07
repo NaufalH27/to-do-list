@@ -633,14 +633,33 @@
 
 }
 
-.sort-button:hover, .filter-button:hover {
+.show-all-button {
+    -fx-background-color: #ffffff;
+    -fx-font-weight: bold;
+    -fx-border-color: #c9c9c9;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 6 10;
+    -fx-font-size: 10;
+    -fx-text-fill: #333333;
+
+    -fx-min-width: 50px;  /* Minimum width */
+    -fx-pref-width: 60px; /* Preferred width */
+    -fx-max-width: 100px; /* Maximum width */
+    -fx-min-height: 25px;  /* Minimum height */
+    -fx-pref-height: 30px; /* Preferred height */
+    -fx-max-height: 50px;  /* Maximum height */
+}
+
+.show-all-button:hover, .sort-button:hover, .filter-button:hover {
+    -fx-text-fill: #333333;
     -fx-background-color: #f8f9fa;
     -fx-border-color: #007bff;
     -fx-border-width: 3px;
 }
 
-/* .selected {
+.selected {
     -fx-background-color: #007bff;
     -fx-text-fill: #ffffff;
     -fx-border-color: #007bff;
-} */
+}

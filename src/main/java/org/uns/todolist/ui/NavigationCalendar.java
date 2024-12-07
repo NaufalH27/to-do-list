@@ -252,9 +252,9 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			if(taskDates.contains(currDateIteration)) {
 				String currentStyle = dayButton.getStyle();
 				if(currDateIteration.isBefore(currentDate)) {
-					dayButton.setStyle(currentStyle + "-fx-background-color:" + PAST_TODAY_COLOR + "; -fx-opacity: 0.7");
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(PAST_TODAY_COLOR, 0.8));
 				} else if (currDateIteration.isAfter(currentDate)) {
-					dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR);
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(AFTER_TODAY_COLOR, 0.8));
 				}
 			}
 			
@@ -309,9 +309,9 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			if (taskDates.contains(currentDateIteration)) {
 				String currentStyle = dayButton.getStyle();
 				if(currentDateIteration.isBefore(currentDate)) {
-					dayButton.setStyle(currentStyle + "-fx-background-color:" + PAST_TODAY_COLOR + "; -fx-opacity: 0.7");
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(PAST_TODAY_COLOR, 0.8));
 				} else if (currentDateIteration.isAfter(currentDate)) {
-					dayButton.setStyle(currentStyle + "-fx-background-color:" + AFTER_TODAY_COLOR);
+					dayButton.setStyle(currentStyle + "-fx-background-color:" + lightenHexColor(AFTER_TODAY_COLOR, 0.8));
 				}
 			}
 			navigationCalendarGrid.add(dayButton, col, row);

@@ -67,7 +67,7 @@
             <VBox fx:id="calendarContainer" GridPane.rowIndex="0" 
                 GridPane.halignment="CENTER" 
                 GridPane.valignment="TOP" alignment="TOP_CENTER" maxWidth="380">
-               
+                <Button fx:id="showAllButton" text="Show All" styleClass="show-all-button"/>
             </VBox>
             <VBox  GridPane.rowIndex="1" style="-fx-padding: 0 10 0 10;" alignment="TOP_CENTER" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" >
                 <VBox  style="-fx-padding: 0 0 0 30;" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" maxWidth="440" >
