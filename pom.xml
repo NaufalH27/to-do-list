@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.uns.todolist</groupId>
-    <artifactId>tugas_akhir</artifactId>
+    <artifactId>todolist</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>tugas_akhir</name>
+    <name>todolist</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
