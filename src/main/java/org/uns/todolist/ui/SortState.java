@@ -1,8 +1,8 @@
 package org.uns.todolist.ui;
 
-public enum SortIdentifier {
+public enum SortState {
     DEFAULT,
-    NEWEST,
+    RECENT,
     OLDEST,
     NAME
 }

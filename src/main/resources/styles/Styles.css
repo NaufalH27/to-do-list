@@ -9,27 +9,28 @@
     -fx-font-weight: bold;
 }
 
-#taskScrollPane {
+.task-scroll-pane {
     -fx-fit-to-width: true;
     -fx-background-color: #ffffff;
     -fx-hbar-policy: never;
     -fx-vbar-policy: never;
 }
 
-#taskContainer {
+.task-container {
     -fx-padding: 0 10 10 10;
     -fx-background-color: #ffffff;
     -fx-spacing: 10;
 }
 
-#addContainer {
+.create-pane {
     -fx-max-height: 80;
     -fx-min-height: 80;
+    -fx-pref-height:80;
     -fx-padding: 10 10 10 10;
     -fx-background-color: transparent;
 }
 
-#addTaskForm {
+.create-form {
     -fx-padding: 20;
     -fx-background-color: transparent;
     -fx-border-radius: 24;
@@ -37,7 +38,7 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0.5, 0, 2);
 }
 
-#taskNameField {
+.create-name-field {
     -fx-font-size: 20;
     -fx-font-weight: bold;
     -fx-background-color: transparent;
@@ -107,7 +108,7 @@
     -fx-background-color: #0056b3;
 }
 
-#cancelTaskButton {
+.trigger-extension-button {
     -fx-background-color: transparent;
     -fx-scale-x: 2;
     -fx-scale-y: 2;
@@ -126,7 +127,7 @@
     -fx-font-size: 18px;
 }
 
-#cancelTaskButton:hover {
+.trigger-extension-button:hover {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0.5, 0, 2);
     -fx-scale-x: 2.5;
     -fx-scale-y: 2.5;
@@ -625,12 +626,12 @@
     -fx-font-size: 10;
     -fx-text-fill: #333333;
 
-    -fx-min-width: 50px;  /* Minimum width */
-    -fx-pref-width: 60px; /* Preferred width */
-    -fx-max-width: 100px; /* Maximum width */
-    -fx-min-height: 25px;  /* Minimum height */
-    -fx-pref-height: 30px; /* Preferred height */
-    -fx-max-height: 50px;  /* Maximum height */
+    -fx-min-width: 100px;  /* Minimum width */
+    -fx-pref-width: 100px; /* Preferred width */
+    -fx-max-width: 150px; /* Maximum width */
+    -fx-min-height: 40px;  /* Minimum height */
+    -fx-pref-height: 40px; /* Preferred height */
+    -fx-max-height: 40px;  /* Maximum height */
 }
 
 .show-all-button:hover, .sort-button:hover, .filter-button:hover {

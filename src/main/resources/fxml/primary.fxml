@@ -34,25 +34,10 @@
                     <Label fx:id="planAskLabel" text="Mau Ngapain Hari Ini ?" styleClass="plan-ask-label"/>
                 </VBox>
             </HBox>
-            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 0 0 28;" spacing="10" alignment="TOP_LEFT">
-                <HBox fx:id="addContainer" id="addContainer" VBox.vgrow="ALWAYS" alignment="CENTER">
-                    <VBox fx:id="addTaskForm" id="addTaskForm" HBox.hgrow="ALWAYS" alignment="TOP_CENTER" spacing="10">
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <TextField fx:id="taskNameField" promptText="Tambah Aktivitas..." HBox.hgrow="ALWAYS"/>
-                            <Button fx:id="cancelTaskButton" alignment="CENTER_RIGHT"/>
-                        </HBox>
-                    </VBox>
-                </HBox>
-
-                <ScrollPane fx:id="taskScrollPane" id="taskScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" fitToHeight="true">
-                    <VBox fx:id="taskContainer" id="taskContainer" VBox.vgrow="ALWAYS" alignment="TOP_LEFT" spacing="10">
-                        <Region VBox.vgrow="ALWAYS"/>
-                    </VBox>
-                </ScrollPane>
+            <VBox fx:id="taskPanel" VBox.vgrow="ALWAYS" style="-fx-padding: 16 0 0 28;" spacing="10" alignment="TOP_LEFT">
             </VBox>
         </VBox>
             
-
         <GridPane fx:id="navigationContainer" style="-fx-padding: 10;" GridPane.columnIndex="1" vgap="32"
             alignment="TOP_CENTER" HBox.hgrow="ALWAYS">
             <columnConstraints>
@@ -60,33 +45,15 @@
             </columnConstraints>
 
             <rowConstraints>
-                <RowConstraints percentHeight="60" vgrow="ALWAYS"/> 
-                <RowConstraints percentHeight="40" vgrow="ALWAYS"/> 
+                <RowConstraints percentHeight="50" vgrow="ALWAYS"/> 
+                <RowConstraints percentHeight="50" vgrow="ALWAYS"/> 
             </rowConstraints>
 
             <VBox fx:id="calendarContainer" GridPane.rowIndex="0" 
                 GridPane.halignment="CENTER" 
                 GridPane.valignment="TOP" alignment="TOP_CENTER" maxWidth="380">
-                <Button fx:id="showAllButton" text="Show All" styleClass="show-all-button"/>
             </VBox>
-            <VBox  GridPane.rowIndex="1" style="-fx-padding: 0 10 0 10;" alignment="TOP_CENTER" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" >
-                <VBox  style="-fx-padding: 0 0 0 30;" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" maxWidth="440" >
-                    <!-- Sort Section -->
-                    <Label text="SORT" styleClass="section-title"/>
-                    <HBox spacing="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
-                        <Button fx:id="defaultButton" text="Default" styleClass="sort-button"/>
-                        <Button fx:id="recentButton" text="Recent" styleClass="sort-button"/>
-                        <Button fx:id="oldestButton" text="Oldest" styleClass="sort-button"/>
-                        <Button fx:id="nameButton" text="Name" styleClass="sort-button"/>
-                    </HBox>
-                    <Region VBox.vgrow="NEVER" prefHeight="40"/>
-                    <Label text="FILTER" styleClass="section-title"/>
-                    <FlowPane hgap="8" vgap="8" style="-fx-padding: 8 0 0 8;" alignment="CENTER_LEFT">
-                        <Button fx:id="completedButton" text="Completed" styleClass="filter-button"/>
-                        <Button fx:id="incompleteButton" text="Incomplete" styleClass="filter-button"/>
-                    </FlowPane>
-
-                </VBox>
+            <VBox fx:id="navigationPanel" GridPane.rowIndex="1" style="-fx-padding: 0 10 0 10;" alignment="TOP_CENTER" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" >
             </VBox>
 
         </GridPane>

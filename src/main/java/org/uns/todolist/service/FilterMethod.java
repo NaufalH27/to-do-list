@@ -8,7 +8,7 @@ import org.uns.todolist.models.Task;
 
 public class FilterMethod {
 
-    public static List<Task> defaultMethod(List<Task> tasks) {
+    public static List<Task> noFilter(List<Task> tasks) {
         return tasks;
     }
     public static List<Task> ByCompleted(List<Task> tasks) {

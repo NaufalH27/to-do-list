@@ -14,12 +14,11 @@ import java.util.stream.Collectors;
 
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
-import org.uns.todolist.FXMLController;
-import org.uns.todolist.models.CalendarEvent;
 import org.uns.todolist.models.Task;
-import org.uns.todolist.service.UiObserver;
+import org.uns.todolist.service.DataObserver;
 
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -43,9 +42,10 @@ import javafx.scene.paint.Paint;
  * berikut link refrensinya : https://github.com/JKostikiadis/JFXCalendar
  */
 
-public class NavigationCalendar extends VBox implements UiObserver {
+public class NavigationCalendar extends VBox implements DataObserver {
 	private static final String AFTER_TODAY_COLOR = "#A5D8A5";
 	private static final String PAST_TODAY_COLOR = "#FF6F61";
+	private static final String TODAY_COLOR ="#4285F4";
 
 	private final int PREVIOUS = 0;
 	private final int CURRENT = 1;
@@ -53,28 +53,26 @@ public class NavigationCalendar extends VBox implements UiObserver {
 
 	private GridPane navigationCalendarGrid;
 	private Button selectedCalendarCell;
-	private HBox navigationPane;
+	private final HBox navigationPane;
 
-	private IntegerProperty currentYearProperty = new SimpleIntegerProperty();
-	private StringProperty currentMonthProperty = new SimpleStringProperty();
-	private IntegerProperty currentDayProperty = new SimpleIntegerProperty();
+	private final IntegerProperty currentYearProperty = new SimpleIntegerProperty();
+	private final StringProperty currentMonthProperty = new SimpleStringProperty();
+	private final IntegerProperty currentDayProperty = new SimpleIntegerProperty();
 	private LocalDate selectedDate;
 	private LocalDate markedDate;
 
-	private IntegerProperty markedCell = new SimpleIntegerProperty();
+	private final IntegerProperty markedCell = new SimpleIntegerProperty();
 
 	public StringProperty selectedDateProperty = new SimpleStringProperty();
 
-	public final FXMLController controller;
-	
-	Set<LocalDate> taskDates;
+	private Set<LocalDate> taskDates;
+	private final ObjectProperty<LocalDate> globalDateState;
 
 	@Override
-	public void update(List<Task> tasks) {
+	public void updateData(List<Task> tasks) {
 		updateDates(tasks);
 		this.refreshCalendar();
 	}
-
 
 	private void updateDates(List<Task> tasks) {
 		this.taskDates = tasks.stream()
@@ -88,9 +86,8 @@ public class NavigationCalendar extends VBox implements UiObserver {
 	}
 	
 
-
-	public NavigationCalendar(List<Task> tasks, FXMLController controller) {
-		this.controller = controller;
+	public NavigationCalendar(List<Task> tasks, ObjectProperty<LocalDate> globalDateState) {
+		this.globalDateState = globalDateState;
 		updateDates(tasks);
 		// Calendar pane
 		setId("navigation_calendar");
@@ -104,7 +101,6 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		selectedDate = LocalDate.now();
 		createCalendarGrid();
 		getChildren().addAll(navigationPane, navigationCalendarGrid);
-
 		
 	}
 
@@ -127,83 +123,6 @@ public class NavigationCalendar extends VBox implements UiObserver {
 		this.refreshCalendar();
 	}
 
-	private void refreshNavigationPane() {
-		// Tool bar controls initialization
-		Label yearLabel = new Label();
-		Label monthLabel = new Label();
-
-		yearLabel.textProperty().bind(currentYearProperty.asString()); // Bind year
-		monthLabel.textProperty().bind(currentMonthProperty);          // Bind month
-
-		yearLabel.setId("calendar_year_label");
-		monthLabel.setId("calendar_month_label");
-
-		// Stack year and month labels vertically
-		VBox dateContainer = new VBox(5, yearLabel, monthLabel);
-		dateContainer.setAlignment(Pos.CENTER);
-
-		// Navigation buttons
-		FontIcon previousMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_LEFT);
-		FontIcon nextMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_RIGHT);
-		previousMonthIcon.setIconSize(20);
-		nextMonthIcon.setIconSize(20);
-
-		Button prevMonthButton = new Button();
-		Button nextMonthButton = new Button();
-
-		prevMonthButton.getStyleClass().add("circle_buttom_sm");
-		nextMonthButton.getStyleClass().add("circle_buttom_sm");
-
-		prevMonthButton.setGraphic(previousMonthIcon);
-		nextMonthButton.setGraphic(nextMonthIcon);
-		LocalDate currentDay = LocalDate.now();
-
-		LocalDate currentMonthFirstDay = selectedDate.with(TemporalAdjusters.firstDayOfMonth());
-		Optional<LocalDate> nearestBeforeCurrentMonth = taskDates.stream()
-                .filter(date -> date.isBefore(currentMonthFirstDay)) 
-                 .min(Comparator.comparingLong(date -> 
-						Math.abs(ChronoUnit.DAYS.between(date, currentMonthFirstDay)) 
-					));
-		
-		nearestBeforeCurrentMonth.ifPresent(date -> {
-			if (date.isBefore(currentDay)) {
-				previousMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
-			} else {
-				previousMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
-			}
-		});
-
-		LocalDate currentMonthLastDay = selectedDate.with(TemporalAdjusters.lastDayOfMonth());
-		Optional<LocalDate> nearestAfterCurrentMonth = taskDates.stream()
-                .filter(date -> date.isAfter(currentMonthLastDay)) 
-                 .min(Comparator.comparingLong(date -> 
-						Math.abs(ChronoUnit.DAYS.between(date, currentMonthLastDay)) 
-					));
-
-		nearestAfterCurrentMonth.ifPresent(date -> {
-			if (date.isBefore(currentDay)) {
-				nextMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
-			} else {
-				nextMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
-			}
-		});
-
-		// Button actions
-		prevMonthButton.setOnAction(e -> {
-			moveMonthBackwardOnNavCalendar();
-			refreshCalendar();
-			clearSelection();
-		});
-
-		nextMonthButton.setOnAction(e -> {
-			moveMonthForwardOnNavCalendar();
-			refreshCalendar();
-			clearSelection();
-		});
-
-		navigationPane.getChildren().clear();
-		navigationPane.getChildren().addAll(prevMonthButton, dateContainer, nextMonthButton);
-	}
 
 
 
@@ -324,7 +243,93 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			currentDateIncrement++;
 			col++;
 		}
-		controller.reportDateCalendarChange(markedDate);
+	}
+
+
+	private void refreshNavigationPane() {
+		// Tool bar controls initialization
+		Label yearLabel = new Label();
+		Label monthLabel = new Label();
+
+		yearLabel.textProperty().bind(currentYearProperty.asString()); // Bind year
+		monthLabel.textProperty().bind(currentMonthProperty);          // Bind month
+
+		yearLabel.setId("calendar_year_label");
+		monthLabel.setId("calendar_month_label");
+
+		// Stack year and month labels vertically
+		VBox dateContainer = new VBox(5, yearLabel, monthLabel);
+		dateContainer.setAlignment(Pos.CENTER);
+
+		// Navigation buttons
+		FontIcon previousMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_LEFT);
+		FontIcon nextMonthIcon = new FontIcon(FontAwesomeSolid.ANGLE_RIGHT);
+		previousMonthIcon.setIconSize(20);
+		nextMonthIcon.setIconSize(20);
+
+		Button prevMonthButton = new Button();
+		Button nextMonthButton = new Button();
+
+		prevMonthButton.getStyleClass().add("circle_buttom_sm");
+		nextMonthButton.getStyleClass().add("circle_buttom_sm");
+
+		prevMonthButton.setGraphic(previousMonthIcon);
+		nextMonthButton.setGraphic(nextMonthIcon);
+		LocalDate currentDay = LocalDate.now();
+
+		LocalDate currentMonthFirstDay = selectedDate.with(TemporalAdjusters.firstDayOfMonth());
+		Optional<LocalDate> nearestBeforeCurrentMonth = taskDates.stream()
+                .filter(date -> date.isBefore(currentMonthFirstDay)) 
+                 .min(Comparator.comparingLong(date -> 
+						Math.abs(ChronoUnit.DAYS.between(date, currentMonthFirstDay)) 
+					));
+		
+		nearestBeforeCurrentMonth.ifPresent(date -> {
+			if (date.isBefore(currentDay)) {
+				previousMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
+			} else {
+				previousMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
+			} 
+
+			if (date.getYear() == currentDay.getYear() && date.getMonthValue() == currentDay.getMonthValue()) {
+				previousMonthIcon.setIconColor(Paint.valueOf(TODAY_COLOR));
+			}
+		});
+
+		LocalDate currentMonthLastDay = selectedDate.with(TemporalAdjusters.lastDayOfMonth());
+		Optional<LocalDate> nearestAfterCurrentMonth = taskDates.stream()
+                .filter(date -> date.isAfter(currentMonthLastDay)) 
+                 .min(Comparator.comparingLong(date -> 
+						Math.abs(ChronoUnit.DAYS.between(date, currentMonthLastDay)) 
+					));
+
+		nearestAfterCurrentMonth.ifPresent(date -> {
+			if (date.isBefore(currentDay)) {
+				nextMonthIcon.setIconColor(Paint.valueOf(PAST_TODAY_COLOR));
+			} else {
+				nextMonthIcon.setIconColor(Paint.valueOf(AFTER_TODAY_COLOR));
+			}
+
+			if (date.getYear() == currentDay.getYear() && date.getMonthValue() == currentDay.getMonthValue()) {
+				nextMonthIcon.setIconColor(Paint.valueOf(TODAY_COLOR));
+			}
+		});
+
+		// Button actions
+		prevMonthButton.setOnAction(e -> {
+			moveMonthBackwardOnNavCalendar();
+			refreshCalendar();
+			clearSelection();
+		});
+
+		nextMonthButton.setOnAction(e -> {
+			moveMonthForwardOnNavCalendar();
+			refreshCalendar();
+			clearSelection();
+		});
+
+		navigationPane.getChildren().clear();
+		navigationPane.getChildren().addAll(prevMonthButton, dateContainer, nextMonthButton);
 	}
 			
 	public void select(int day) {
@@ -359,8 +364,8 @@ public class NavigationCalendar extends VBox implements UiObserver {
 			selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			markedDate = selectedDate.withDayOfMonth(markedCell.get());
 			refreshCalendar();
-
-			selectedDateProperty.set(getSelectedDate());
+			globalDateState.set(markedDate);
+			
 			// Notify for the change ( We are using a InvalidationListener )
 			// TODO : Change to StringBinding or something in order to use
 			// ChangeListener instead.

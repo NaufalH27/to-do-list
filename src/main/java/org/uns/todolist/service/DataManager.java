@@ -12,7 +12,7 @@ import org.uns.todolist.models.Task;
 public class DataManager {
     private final SaveData data;
     private final DataPersistence persistence;
-    private final List<UiObserver> observers = new ArrayList<>();
+    private final List<DataObserver> observers = new ArrayList<>();
 
     public DataManager(SaveData data, DataPersistence persistence) {
         this.data = data;
@@ -51,13 +51,7 @@ public class DataManager {
      */
     public synchronized void removeTask(int taskId)  throws IOException {
         Task taskToRemove = this.getTaskById(taskId);
-        
-        if (taskToRemove == null) {
-            throw new IllegalArgumentException("Task not found.");
-        }
-        
         this.data.removeTask(taskToRemove);
-        
         //save data
         this.persistence.save(this.data);
         this.notifyObserver();
@@ -78,9 +72,6 @@ public class DataManager {
 
     public synchronized void uncompleteTask(int taskId) throws IOException {
         Task taskToComplete = this.getTaskById(taskId);
-        if (taskToComplete == null) {
-            throw new IllegalArgumentException("Task not found.");
-        }
         taskToComplete.uncompleteTask();
         this.persistence.save(this.data);
         this.notifyObserver();
@@ -97,23 +88,23 @@ public class DataManager {
     }
 
     public synchronized void editTask(int taskId, String newName, Date newDeadline) throws IOException {
-        Task editedTask = getTaskById(taskId);
-        if (editedTask == null) {
-            throw new IllegalArgumentException("Task not found.");
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nama Aktivitas Tidak Boleh Kosong");
         }
+        Task editedTask = getTaskById(taskId);
         editedTask.setNamaTask(newName);
         editedTask.setDeadline(newDeadline);
         this.persistence.save(this.data);
         this.notifyObserver();
     }
     
-    public synchronized void addListener(UiObserver listener) {
+    public synchronized void addObserver(DataObserver listener) {
         observers.add(listener);
     }
 
     public synchronized void notifyObserver() {
-        for (UiObserver observer : observers) {
-            observer.update(this.getAllTasks());
+        for (DataObserver observer : observers) {
+            observer.updateData(this.getAllTasks());
         }
     }
     
