@@ -208,6 +208,15 @@ public class NavigationCalendar extends VBox implements DataObserver {
 			
 			navigationCalendarGrid.add(dayButton, col++, row);
 			this.adjustButton(dayButton);
+
+			if (currDateIteration.equals(currentDate)) {
+				dayButton.setId("currentDay");
+			}
+
+			if (taskDates.contains(currDateIteration) && currDateIteration.isEqual(currentDate)) {
+				String currentStyle = dayButton.getStyle();
+				dayButton.setStyle(currentStyle + "-fx-background-color:  #FFD54F; -fx-text-fill : black;");
+			}
 	
 			if (i == markedCell.get() && markedDate != null) {
 				// Highlight the selected day
@@ -215,9 +224,6 @@ public class NavigationCalendar extends VBox implements DataObserver {
 				selectedCalendarCell = dayButton;
 			}
 	
-			if (currDateIteration.equals(currentDate)) {
-				dayButton.setId("currentDay");
-			}
 		}
 	
 		// Add next month's days until the grid is filled (7 rows, 7 columns)
