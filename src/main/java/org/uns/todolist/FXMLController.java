@@ -17,6 +17,7 @@ import org.uns.todolist.ui.SortState;
 import org.uns.todolist.ui.TaskCreationPane;
 import org.uns.todolist.ui.TaskScrollPane;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
@@ -52,6 +53,7 @@ public class FXMLController {
     private final ObjectProperty<LocalDate> dateState = new SimpleObjectProperty<>(null);
     private final ObjectProperty<FilterState> filterState = new SimpleObjectProperty<>(FilterState.SHOW_ALL);
     private final ObjectProperty<SortState> sortState = new SimpleObjectProperty<>(SortState.DEFAULT);
+
     
     public FXMLController(DataManager dataManager) {
 
@@ -79,6 +81,7 @@ public class FXMLController {
         //setup navigator
         this.navigator = new Navigator(dateState, filterState, sortState);
         VBox.setVgrow(navigator, Priority.ALWAYS);
+        dataManager.addObserver(navigator);
     }
 
     private void stateListener() {
@@ -91,6 +94,7 @@ public class FXMLController {
         });
 
         filterState.addListener((observable, oldValue, newValue) -> {
+            taskScrollPane.removeEdittedTaskBox();
             switch (newValue) {
                 case SHOW_ALL -> taskScrollPane.setFilterMethod(FilterMethod::noFilter);
                 case COMPLETED -> taskScrollPane.setFilterMethod(FilterMethod::ByCompleted);
@@ -99,11 +103,31 @@ public class FXMLController {
         });
         
         sortState.addListener((observable, oldValue, newValue) -> {
+            taskScrollPane.removeEdittedTaskBox();
             switch (newValue) {
                 case DEFAULT ->taskScrollPane.setSortMethod(SortingMethod::defaultMethod);
                 case RECENT -> taskScrollPane.setSortMethod(SortingMethod::byRecentlyCreated);
                 case OLDEST -> taskScrollPane.setSortMethod(SortingMethod::byOldestCreated);
                 case NAME -> taskScrollPane.setSortMethod(SortingMethod::byName);
+            }
+        });
+    }
+
+
+    private void setupEditAndCreationBinding(BooleanProperty isCreating, 
+                                             ObjectProperty<HBox> taskBoxEdittingListener
+                                            ) {
+        isCreating.addListener((obs, oldFlag, newFlag) -> {
+            if (newFlag) {
+                taskScrollPane.handleCancelEditButton();
+                
+            }
+        });
+
+        taskBoxEdittingListener.addListener((obs, oldValue, newValue) -> {
+            if (newValue != null) {
+                isCreating.set(false);
+                creationPane.handleShrinkingFIeld();
             }
         });
     }
@@ -114,6 +138,7 @@ public class FXMLController {
         calendarContainer.getChildren().add(this.navCalendar);
         navigationPanel.getChildren().add(this.navigator);
         taskPanel.getChildren().addAll(this.creationPane, this.taskScrollPane);
+        setupEditAndCreationBinding( creationPane.getCreationState(), taskScrollPane.getEdittingState());
         
         //title update
         adjustScrollSpeed(SCROLL_SPEED);

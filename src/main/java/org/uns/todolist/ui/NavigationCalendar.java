@@ -71,6 +71,7 @@ public class NavigationCalendar extends VBox implements DataObserver {
 	@Override
 	public void updateData(List<Task> tasks) {
 		updateDates(tasks);
+		resetMarkedCell();
 		this.refreshCalendar();
 	}
 

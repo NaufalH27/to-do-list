@@ -15,9 +15,9 @@ import org.uns.todolist.helper.DayHelper;
 import org.uns.todolist.helper.ResponsiveHelper;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
+import org.uns.todolist.service.DataObserver;
 import org.uns.todolist.service.FilterMethod;
 import org.uns.todolist.service.SortingMethod;
-import org.uns.todolist.service.DataObserver;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -49,6 +49,7 @@ public class TaskScrollPane extends ScrollPane implements DataObserver {
     private final VBox taskContainer;
     private final BooleanProperty isEditting = new SimpleBooleanProperty(false);
 
+
     private final DataManager dataManager;
     
     public TaskScrollPane(List<Task> initialTasks, DataManager dataManager) {
@@ -70,7 +71,7 @@ public class TaskScrollPane extends ScrollPane implements DataObserver {
         this.getStyleClass().add("task-scroll-pane");
 
         refreshTaskContainer();
-        edittedTaskBoxListener();
+        flagListener();
     }
 
     @Override
@@ -305,15 +306,19 @@ public class TaskScrollPane extends ScrollPane implements DataObserver {
         return editContainer;
     }
 
-    private void edittedTaskBoxListener() {
+    private void flagListener() {
         edittedTaskBox.addListener((observable, oldFlag, newFlag) -> {
             if (newFlag != null) {
                 if (oldFlag != null) {
                     refreshTaskContainer();
                 }
-                
-            } 
+            }
         });
+    }
+
+    public void removeEdittedTaskBox() {
+        this.edittedTaskBox.set(null);
+        refreshTaskContainer();
     }
     
     private void clearDatePicker(DatePicker datePicker) {
@@ -335,10 +340,14 @@ public class TaskScrollPane extends ScrollPane implements DataObserver {
         refreshTaskContainer();
     }
 
-    private void handleCancelEditButton() {
+    public void handleCancelEditButton() {
         edittedTaskBox.set(null);
         refreshTaskContainer();
         isEditting.set(false);
+    }
+
+    public ObjectProperty<HBox> getEdittingState() {
+        return edittedTaskBox;
     }
 
     private void toggleTaskCompletion(Task task) {

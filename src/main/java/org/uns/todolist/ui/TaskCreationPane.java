@@ -34,6 +34,8 @@ public class TaskCreationPane extends HBox {
     private final BooleanProperty isCreating = new SimpleBooleanProperty(false);
     private final DataManager dataManager;
 
+    private HBox deadlineInputContainer = null;
+    
     public TaskCreationPane(DataManager dataManager) {
         this.dataManager = dataManager;
         
@@ -73,16 +75,16 @@ public class TaskCreationPane extends HBox {
         ResponsiveHelper.animateResize(this, 200, Duration.seconds(0.3));
         nameField.setPromptText("Nama Aktivitas");
         triggerExtensionButton.setGraphic(new FontIcon("fas-times"));
-        HBox extendedTaskInputField = createDateInputField();
-        createForm.getChildren().add(extendedTaskInputField);
+        this.deadlineInputContainer = createDateInputField();
+        createForm.getChildren().add(deadlineInputContainer);
         nameField.requestFocus();
-        triggerExtensionButton.setOnAction(e -> handleShrinkingFIeld(extendedTaskInputField));
+        triggerExtensionButton.setOnAction(e -> handleShrinkingFIeld());
         isCreating.set(true);
     }
 
-    public void handleShrinkingFIeld(HBox dateInputField) {
+    public void handleShrinkingFIeld() {
         ResponsiveHelper.animateResize(this, 80, Duration.seconds(0.3));
-        createForm.getChildren().remove(dateInputField);
+        createForm.getChildren().remove(deadlineInputContainer);
         triggerExtensionButton.setGraphic(new FontIcon("fas-plus"));
         triggerExtensionButton.setOnAction(e -> isCreating.set(true));
         nameField.setPromptText("Tambahkan Aktivitas...");
@@ -123,7 +125,7 @@ public class TaskCreationPane extends HBox {
         HBox.setHgrow(dateContainer, Priority.ALWAYS);
         VBox.setVgrow(dateContainer, Priority.ALWAYS);
 
-        addTaskButton.setOnAction(e -> handleAddTask(datePicker, dateContainer));
+        addTaskButton.setOnAction(e -> handleAddTask(datePicker));
         return dateContainer;
     }
 
@@ -131,12 +133,12 @@ public class TaskCreationPane extends HBox {
         datePicker.setValue(null); 
     }
 
-    private void handleAddTask(DatePicker datePicker, HBox dateContainer) {
+    private void handleAddTask(DatePicker datePicker) {
         try{
             String taskName = nameField.getText().trim();
             Date deadline = getDateFromDatePickerInput(datePicker);
             dataManager.addTask(taskName, deadline);
-            handleShrinkingFIeld(dateContainer);
+            handleShrinkingFIeld();
             nameField.clear();
         } catch (IOException e) {
             showError("gagal menambahkan aktivitas. coba lagi.");
@@ -147,7 +149,10 @@ public class TaskCreationPane extends HBox {
         } 
     }
     
- 
+
+    public BooleanProperty getCreationState() {
+        return isCreating;
+    }
 
     private Date getDateFromDatePickerInput(DatePicker datePicker) throws ParseException {
         String dateText = datePicker.getEditor().getText().trim();
@@ -174,7 +179,7 @@ public class TaskCreationPane extends HBox {
         isCreating.addListener((observable, oldFlag, newFlag) -> {
             if (newFlag == true && oldFlag != true) { 
                 handleFieldExtension(); 
-            } 
+            }
     });
 }
 }

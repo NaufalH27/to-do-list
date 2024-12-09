@@ -1,13 +1,12 @@
 package org.uns.todolist.ui;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import org.uns.todolist.service.FilterMethod;
-import org.uns.todolist.service.SortingMethod;
+import org.uns.todolist.models.Task;
+import org.uns.todolist.service.DataObserver;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -18,7 +17,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-public class Navigator extends VBox {
+public class Navigator extends VBox implements DataObserver {
 
     private final Button showAllButton;
     private final Button defaultButton;
@@ -156,6 +155,16 @@ public class Navigator extends VBox {
         showAllButton.getStyleClass().remove("selected");
         completedButton.getStyleClass().remove("selected");
         incompleteButton.getStyleClass().remove("selected");
+    }
+
+
+    @Override
+    public void updateData(List<Task> tasks) {
+        clearFilterButtonSelection();
+        globalFilterState.set(FilterState.SHOW_ALL);
+        globalDateState.set(null);
+        clearFilterButtonSelection();       
+        showAllButton.getStyleClass().add("selected");
     }
 
 
