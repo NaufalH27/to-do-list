@@ -26,7 +26,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-public class TaskCreationPane extends HBox {
+public class TaskCreationPanel extends HBox {
 
     private final TextField nameField;
     private final Button triggerExtensionButton;
@@ -36,7 +36,7 @@ public class TaskCreationPane extends HBox {
 
     private HBox deadlineInputContainer = null;
     
-    public TaskCreationPane(DataManager dataManager) {
+    public TaskCreationPanel(DataManager dataManager) {
         this.dataManager = dataManager;
         
         this.setAlignment(Pos.CENTER);

@@ -10,12 +10,12 @@ import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataManager;
 import org.uns.todolist.service.FilterMethod;
 import org.uns.todolist.service.SortingMethod;
-import org.uns.todolist.ui.FilterState;
-import org.uns.todolist.ui.NavigationCalendar;
+import org.uns.todolist.ui.Calendar;
 import org.uns.todolist.ui.Navigator;
-import org.uns.todolist.ui.SortState;
-import org.uns.todolist.ui.TaskCreationPane;
-import org.uns.todolist.ui.TaskScrollPane;
+import org.uns.todolist.ui.TaskCreationPanel;
+import org.uns.todolist.ui.TaskViewPanel;
+import org.uns.todolist.ui.constant.FilterState;
+import org.uns.todolist.ui.constant.SortState;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -42,9 +42,9 @@ public class FXMLController {
     @FXML
     private Label greeting;
 
-    private final TaskCreationPane creationPane;
-    private final NavigationCalendar navCalendar;
-    private final TaskScrollPane taskScrollPane;
+    private final TaskCreationPanel creationPanel;
+    private final Calendar navCalendar;
+    private final TaskViewPanel viewPanel;
     private final Navigator navigator;
     private final DataManager dataManager;
     private static final double SCROLL_SPEED = 500;
@@ -62,21 +62,21 @@ public class FXMLController {
         List<Task> initialTasksData = dataManager.getAllTasks();
         
         //setup Task creation field
-        this.creationPane = new TaskCreationPane(dataManager);
-        VBox.setVgrow(creationPane, Priority.ALWAYS);
-        HBox.setHgrow(creationPane, Priority.ALWAYS);
+        this.creationPanel = new TaskCreationPanel(dataManager);
+        VBox.setVgrow(creationPanel, Priority.ALWAYS);
+        HBox.setHgrow(creationPanel, Priority.ALWAYS);
                 
         //setup calendar
-        this.navCalendar = new NavigationCalendar(initialTasksData, dateState);
+        this.navCalendar = new Calendar(initialTasksData, dateState);
         VBox.setVgrow(navCalendar, Priority.ALWAYS);
 		HBox.setHgrow(navCalendar, Priority.ALWAYS);
         dataManager.addObserver(navCalendar);
 
         //setup task container
-        this.taskScrollPane = new TaskScrollPane(initialTasksData, this.dataManager);
-        VBox.setVgrow(taskScrollPane, Priority.ALWAYS);
-        HBox.setHgrow(taskScrollPane, Priority.ALWAYS);
-        dataManager.addObserver(taskScrollPane);
+        this.viewPanel = new TaskViewPanel(initialTasksData, this.dataManager);
+        VBox.setVgrow(viewPanel, Priority.ALWAYS);
+        HBox.setHgrow(viewPanel, Priority.ALWAYS);
+        dataManager.addObserver(viewPanel);
 
         //setup navigator
         this.navigator = new Navigator(dateState, filterState, sortState);
@@ -86,7 +86,7 @@ public class FXMLController {
 
     private void stateListener() {
         dateState.addListener((observable, oldValue, newValue) -> {
-            taskScrollPane.setFilterDate(newValue);
+            viewPanel.setFilterDate(newValue);
             if (newValue == null) {
                 navCalendar.resetMarkedCell();
             }
@@ -94,21 +94,21 @@ public class FXMLController {
         });
 
         filterState.addListener((observable, oldValue, newValue) -> {
-            taskScrollPane.removeEdittedTaskBox();
+            viewPanel.removeEdittedTaskBox();
             switch (newValue) {
-                case SHOW_ALL -> taskScrollPane.setFilterMethod(FilterMethod::noFilter);
-                case COMPLETED -> taskScrollPane.setFilterMethod(FilterMethod::ByCompleted);
-                case INCOMPLETE -> taskScrollPane.setFilterMethod(FilterMethod::ByIncomplete);
+                case SHOW_ALL -> viewPanel.setFilterMethod(FilterMethod::noFilter);
+                case COMPLETED -> viewPanel.setFilterMethod(FilterMethod::ByCompleted);
+                case INCOMPLETE -> viewPanel.setFilterMethod(FilterMethod::ByIncomplete);
             }
         });
         
         sortState.addListener((observable, oldValue, newValue) -> {
-            taskScrollPane.removeEdittedTaskBox();
+            viewPanel.removeEdittedTaskBox();
             switch (newValue) {
-                case DEFAULT ->taskScrollPane.setSortMethod(SortingMethod::defaultMethod);
-                case RECENT -> taskScrollPane.setSortMethod(SortingMethod::byRecentlyCreated);
-                case OLDEST -> taskScrollPane.setSortMethod(SortingMethod::byOldestCreated);
-                case NAME -> taskScrollPane.setSortMethod(SortingMethod::byName);
+                case DEFAULT ->viewPanel.setSortMethod(SortingMethod::defaultMethod);
+                case RECENT -> viewPanel.setSortMethod(SortingMethod::byRecentlyCreated);
+                case OLDEST -> viewPanel.setSortMethod(SortingMethod::byOldestCreated);
+                case NAME -> viewPanel.setSortMethod(SortingMethod::byName);
             }
         });
     }
@@ -119,7 +119,7 @@ public class FXMLController {
                                             ) {
         isCreating.addListener((obs, oldFlag, newFlag) -> {
             if (newFlag) {
-                taskScrollPane.handleCancelEditButton();
+                viewPanel.handleCancelEditButton();
                 
             }
         });
@@ -127,7 +127,7 @@ public class FXMLController {
         taskBoxEdittingListener.addListener((obs, oldValue, newValue) -> {
             if (newValue != null) {
                 isCreating.set(false);
-                creationPane.handleShrinkingFIeld();
+                creationPanel.handleShrinkingFIeld();
             }
         });
     }
@@ -137,8 +137,8 @@ public class FXMLController {
         //placing ui to the apropriate location
         calendarContainer.getChildren().add(this.navCalendar);
         navigationPanel.getChildren().add(this.navigator);
-        taskPanel.getChildren().addAll(this.creationPane, this.taskScrollPane);
-        setupEditAndCreationBinding( creationPane.getCreationState(), taskScrollPane.getEdittingState());
+        taskPanel.getChildren().addAll(this.creationPanel, this.viewPanel);
+        setupEditAndCreationBinding( creationPanel.getCreationState(), viewPanel.getEdittingState());
         
         //title update
         adjustScrollSpeed(SCROLL_SPEED);
@@ -174,13 +174,13 @@ public class FXMLController {
     }
 
     private void adjustScrollSpeed(double speed) {
-        taskScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        taskScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        taskScrollPane.setOnScroll(event -> {
+        viewPanel.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        viewPanel.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        viewPanel.setOnScroll(event -> {
             double deltaY = event.getDeltaY() * speed;
-            double newVvalue = taskScrollPane.getVvalue() - deltaY;
+            double newVvalue = viewPanel.getVvalue() - deltaY;
             newVvalue = Math.min(Math.max(newVvalue, 0.0), 1.0);
-            taskScrollPane.setVvalue(newVvalue);
+            viewPanel.setVvalue(newVvalue);
             event.consume();
         });
     }

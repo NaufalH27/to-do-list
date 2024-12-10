@@ -1,4 +1,4 @@
-package org.uns.todolist.ui;
+package org.uns.todolist.ui.constant;
 
 
 

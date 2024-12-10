@@ -40,7 +40,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 
-public class TaskScrollPane extends ScrollPane implements DataObserver {
+public class TaskViewPanel extends ScrollPane implements DataObserver {
     private List<Task> tasks;
     private Function<List<Task>, List<Task>> sortMethod = SortingMethod::defaultMethod;
     private Function<List<Task>, List<Task>> filterMethod = FilterMethod::noFilter;
@@ -52,7 +52,7 @@ public class TaskScrollPane extends ScrollPane implements DataObserver {
 
     private final DataManager dataManager;
     
-    public TaskScrollPane(List<Task> initialTasks, DataManager dataManager) {
+    public TaskViewPanel(List<Task> initialTasks, DataManager dataManager) {
         this.dataManager = dataManager;
         this.tasks = initialTasks;
         this.taskContainer = new VBox();

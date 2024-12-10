@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataObserver;
+import org.uns.todolist.ui.constant.FilterState;
+import org.uns.todolist.ui.constant.SortState;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;

@@ -16,6 +16,7 @@ import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataObserver;
+import org.uns.todolist.ui.constant.CalendarEvent;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -42,7 +43,7 @@ import javafx.scene.paint.Paint;
  * berikut link refrensinya : https://github.com/JKostikiadis/JFXCalendar
  */
 
-public class NavigationCalendar extends VBox implements DataObserver {
+public class Calendar extends VBox implements DataObserver {
 	private static final String AFTER_TODAY_COLOR = "#A5D8A5";
 	private static final String PAST_TODAY_COLOR = "#FF6F61";
 	private static final String TODAY_COLOR ="#4285F4";
@@ -87,7 +88,7 @@ public class NavigationCalendar extends VBox implements DataObserver {
 	}
 	
 
-	public NavigationCalendar(List<Task> tasks, ObjectProperty<LocalDate> globalDateState) {
+	public Calendar(List<Task> tasks, ObjectProperty<LocalDate> globalDateState) {
 		this.globalDateState = globalDateState;
 		updateDates(tasks);
 		// Calendar pane
