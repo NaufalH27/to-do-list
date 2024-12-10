@@ -16,7 +16,6 @@ import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.uns.todolist.models.Task;
 import org.uns.todolist.service.DataObserver;
-import org.uns.todolist.ui.constant.CalendarEvent;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -47,6 +46,11 @@ public class Calendar extends VBox implements DataObserver {
 	private static final String AFTER_TODAY_COLOR = "#A5D8A5";
 	private static final String PAST_TODAY_COLOR = "#FF6F61";
 	private static final String TODAY_COLOR ="#4285F4";
+
+	public static final String MONTHS[] = { "Jan", "Feb", "Mar", "Apr","Mei", "Jun", "Jul", "Aug", "Sep", 
+	                                        "Oct", "Nov","Des" };
+	public static final String[] DAYS_FULL_NAMES = { "Senin", "Selasa", "Rabu","Kamis", "Jumat", "Sabtu", "Minggu" };
+	public static final String[] DAYS_NAMES_LETTERS = { "Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min", };
 
 	private final int PREVIOUS = 0;
 	private final int CURRENT = 1;
@@ -134,8 +138,8 @@ public class Calendar extends VBox implements DataObserver {
 		this.refreshNavigationPane();
 	
 		// Add headers (days) and their tooltips
-		String tooltipText[] = CalendarEvent.DAYS_FULL_NAMES;
-		String dayText[] = CalendarEvent.DAYS_NAMES_LETTERS;
+		String tooltipText[] = DAYS_FULL_NAMES;
+		String dayText[] = DAYS_NAMES_LETTERS;
 		for (int col = 0; col < 7; col++) {
 			int row = 0;
 			Button dayButton = new Button(dayText[col]);
@@ -150,7 +154,7 @@ public class Calendar extends VBox implements DataObserver {
 		int lengthOfSelectedMonth = selectedDate.lengthOfMonth();
 		int selectedYear = selectedDate.getYear();
 	
-		currentMonthProperty.set(CalendarEvent.MONTHS[selectedMonthIndex - 1]);
+		currentMonthProperty.set(MONTHS[selectedMonthIndex - 1]);
 		currentYearProperty.set(selectedYear);
 		currentDayProperty.set(selectedDate.getDayOfMonth());
 	
@@ -357,17 +361,20 @@ public class Calendar extends VBox implements DataObserver {
 
 		button.setOnAction(e -> {
 			clearSelection();
-
-			if (monthIndex == CURRENT) {
-				button.setStyle("-fx-background-color : #c0c0c0; -fx-text-fill : black");
-				selectedCalendarCell = button;
-				markedCell.set(Integer.parseInt(text));
-			} else if (monthIndex == PREVIOUS) {
-				markedCell.set(Integer.parseInt(text));
-				moveMonthBackwardOnNavCalendar();
-			} else {
-				markedCell.set(Integer.parseInt(text));
-				moveMonthForwardOnNavCalendar();
+			switch (monthIndex) {
+				case CURRENT -> {
+					button.setStyle("-fx-background-color : #c0c0c0; -fx-text-fill : black");
+					selectedCalendarCell = button;
+					markedCell.set(Integer.parseInt(text));
+				}
+				case PREVIOUS -> {
+					markedCell.set(Integer.parseInt(text));
+					moveMonthBackwardOnNavCalendar();
+				}
+				default -> {
+					markedCell.set(Integer.parseInt(text));
+					moveMonthForwardOnNavCalendar();
+				}
 			}
 			selectedDate = selectedDate.withDayOfMonth(markedCell.get());
 			markedDate = selectedDate.withDayOfMonth(markedCell.get());
@@ -400,20 +407,13 @@ public class Calendar extends VBox implements DataObserver {
 
 	private int findDayIndex(DayOfWeek dayOfWeek) {
 		switch (dayOfWeek) {
-		case MONDAY:
-			return 0;
-		case TUESDAY:
-			return 1;
-		case WEDNESDAY:
-			return 2;
-		case THURSDAY:
-			return 3;
-		case FRIDAY:
-			return 4;
-		case SATURDAY:
-			return 5;
-		case SUNDAY:
-			return 6;
+		case MONDAY -> {return 0;}
+		case TUESDAY -> {return 1;}
+		case WEDNESDAY -> {return 2;}
+		case THURSDAY -> {return 3;}
+		case FRIDAY -> {return 4;}
+		case SATURDAY -> {return 5;}
+		case SUNDAY -> {return 6;}
 		}
 		return 0;
 	}
@@ -425,7 +425,7 @@ public class Calendar extends VBox implements DataObserver {
 
 	public String getSelectedDate() {
 		String date = markedCell.get() + " "
-				+ CalendarEvent.MONTHS[selectedDate.getMonthValue() - 1].substring(0, 3) + " "
+				+ MONTHS[selectedDate.getMonthValue() - 1].substring(0, 3) + " "
 				+ selectedDate.getYear();
 		return date;
 	}
