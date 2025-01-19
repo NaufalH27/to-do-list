@@ -9,6 +9,10 @@ Projek ini adalah projek akhir kuliah yang dimana setiap kelompok diharuskan mem
 <br>
 
 
+# Preview
+![image](https://github.com/user-attachments/assets/4205abe7-3a8a-4515-b2fa-f041627d2cfa)
+![image](https://github.com/user-attachments/assets/2b11cb65-1ee3-40e7-8a5e-4efdbc807fbe)
+![image](https://github.com/user-attachments/assets/fadfd657-d9ef-46a1-af7f-31000cb0506f)
 
 
 ## Cara compile :
