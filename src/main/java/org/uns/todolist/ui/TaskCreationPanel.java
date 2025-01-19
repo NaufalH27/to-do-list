@@ -2,8 +2,8 @@ package org.uns.todolist.ui;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -155,12 +155,13 @@ public class TaskCreationPanel extends HBox {
     }
 
     private Date getDateFromDatePickerInput(DatePicker datePicker) throws ParseException {
-        String dateText = datePicker.getEditor().getText().trim();
-        Date date = null;
-        if (!dateText.isEmpty()) {
-            date = new SimpleDateFormat("dd/MM/yyyy").parse(dateText);
+        LocalDate localDate = datePicker.getValue();
+        if (localDate != null) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            System.out.println(date);
+            return date;
         }
-        return date;
+        return null;
     }
 
 
